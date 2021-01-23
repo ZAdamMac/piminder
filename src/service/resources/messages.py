@@ -13,8 +13,6 @@ https://github.com/ZAdamMac/Enumpi-C2
 import datetime
 from flask_restful import Resource
 from flask import current_app, request, make_response
-import json
-from os import urandom
 import pymysql
 import uuid
 from .utilities import authenticated_exec, json_validate, token_validate, check_system_secret
@@ -30,23 +28,22 @@ class MessageAPI(Resource):
         :return: In the valid case, a json dictionary of (row, action) pairs
         """
         # FUTURE add query scoping.
-        cookie = request.headers.get["x-pyminder-secret"]
+        cookie = request.headers.get("x-pyminder-secret")
         ttl = int(current_app.config["CLIENT_TTL"])*60
         iss = current_app.config["NETWORK_LABEL"]
         try:
             connection = pymysql.connect(host=current_app.config["DBHOST"],
                                          user=current_app.config["USERNAME"],
                                          password=current_app.config["PASSPHRASE"],
-                                         db='enumpi',
-                                         charset='utf8mb4',
+                                         db='pyminder',
                                          cursorclass=pymysql.cursors.DictCursor)
             connection.ping(reconnect=True)
         except KeyError:
             return {'message': 'Internal Server Error'}, 500
         except pymysql.Error:
             return {'message': 'Internal Server Error'}, 500
-        if check_system_secret(cookie, current_app.PYMINDER_SECRET):
-            dict_return = messages_get()
+        if check_system_secret(cookie, current_app.config['PYMINDER_SECRET']):
+            dict_return = messages_get(connection)
             resp = make_response(dict_return)
             resp.status_code = dict_return["error"]
             resp.content_type = "application/json"
@@ -59,23 +56,22 @@ class MessageAPI(Resource):
 
         :return:
         """
-        cookie = request.headers.get["x-pyminder-secret"]
+        cookie = request.headers.get("x-pyminder-secret")
         ttl = int(current_app.config["CLIENT_TTL"])*60
         iss = current_app.config["NETWORK_LABEL"]
         try:
             connection = pymysql.connect(host=current_app.config["DBHOST"],
                                          user=current_app.config["USERNAME"],
                                          password=current_app.config["PASSPHRASE"],
-                                         db='enumpi',
-                                         charset='utf8mb4',
+                                         db='pyminder',
                                          cursorclass=pymysql.cursors.DictCursor)
             connection.ping(reconnect=True)
         except KeyError:
-            return {'message': 'Internal Server Error'}, 500
-        except pymysql.Error:
-            return {'message': 'Internal Server Error'}, 500
-        if check_system_secret(cookie, current_app.PYMINDER_SECRET):
-            dict_return = messages_post(request.get_json())
+            return {'message': 'Internal Server Error, Key error'}, 500
+        except pymysql.Error as e:
+            return {'message': 'Internal Server Error, sql error'}, 501
+        if check_system_secret(cookie, current_app.config['PYMINDER_SECRET']):
+            dict_return = messages_post(request.get_json(force=True), connection=connection)
             resp = make_response(dict_return)
             resp.status_code = dict_return["error"]
             resp.content_type = "application/json"
@@ -90,23 +86,23 @@ class MessageAPI(Resource):
         :return:
         """
         # deactivate (set permissions 0) a user if authenticated.
-        cookie = request.headers.get["x-pyminder-secret"]
+        cookie = request.headers.get("x-pyminder-secret")
         ttl = int(current_app.config["CLIENT_TTL"]) * 60
         iss = current_app.config["NETWORK_LABEL"]
         try:
             connection = pymysql.connect(host=current_app.config["DBHOST"],
                                          user=current_app.config["USERNAME"],
                                          password=current_app.config["PASSPHRASE"],
-                                         db='enumpi',
-                                         charset='utf8mb4',
+                                         db='pyminder',
+
                                          cursorclass=pymysql.cursors.DictCursor)
             connection.ping(reconnect=True)
         except KeyError:
             return {'message': 'Internal Server Error'}, 500
         except pymysql.Error:
             return {'message': 'Internal Server Error'}, 500
-        if check_system_secret(cookie, current_app.PYMINDER_SECRET):
-            dict_return = messages_delete(request.get_json())
+        if check_system_secret(cookie, current_app.config['PYMINDER_SECRET']):
+            dict_return = messages_delete(request.get_json(), connection)
             resp = make_response(dict_return)
             resp.status_code = dict_return["error"]
             resp.content_type = "application/json"
@@ -117,28 +113,31 @@ class MessageAPI(Resource):
 # Here follow the actual actions!
 
 
-def messages_get(body, connection):
+def messages_get(connection):
     """A stored join function that gets all the currently registered commands,
     their relevant metadata, the name of the client they are associated with
     and the message, if any. This is returned to the requestor in a JSON
     format for further processing."""
     cur = connection.cursor()
-    del body
 
     # Unwieldy command handles most of the data processing in SQL which is faster than doing this in python.
 
-    cmd = "SELECT * FROM messages ODER BY timestamp desc;"
+    cmd = "SELECT * FROM messages ORDER BY time_raised desc;"
     cur.execute(cmd)
     messages = cur.fetchall()
     response = {}
     counter = -1
     for message in messages:
-        output_keys = {"id": "messageId", "name": "name", "read": "read", "errorlevel": "errorLevel",
-                       "timestamp": "timestamp", "message": "message"}
+        output_keys = {"id": "messageId", "name": "name", "read_flag": "read", "errorlevel": "errorLevel",
+                       "time_raised": "timestamp", "message": "message"}
         counter += 1
         this_message = {}
         for key in output_keys.keys():
             this_message.update({output_keys[key]: message[key]})
+        if this_message["read"] == b'\x00':
+            this_message.update({"read": False})
+        else:
+            this_message.update({"read": True})
         response.update({str(counter): this_message})
     response.update({"error": 200})
 
@@ -160,12 +159,13 @@ def messages_post(body, connection):
         d_message.update({"id": str(uuid.uuid4())})
         d_message.update({"read": False})
         d_message.update({"timestamp": datetime.datetime.strptime(body["timestamp"], "%Y-%m-%dT%H:%M:%SZ").timestamp()})
-        cmd = "INSERT INTO message " \
-              "(id, name, timestamp, errorlevel, message, read) " \
+        cmd = "INSERT INTO messages " \
+              "(id, name, time_raised, errorlevel, message, read_flag) " \
               "VALUES (%(id)s, %(name)s, FROM_UNIXTIME(%(timestamp)s), %(errorlevel)s, " \
-              "%(message)s, %(read)s"
+              "%(message)s, %(read)s)"
         cur.execute(cmd, d_message)
         response = {"error": 200}
+        connection.commit()
     else:
         response = {"all_errors": errors, "error": 400}
 
@@ -181,19 +181,21 @@ def messages_delete(body, connection):
 
     if json_valid:
         # First, make sure this hasn't already been executed.
-        cmd = "SELECT time_acknowledged " \
-              "FROM commands " \
-              "WHERE command_id=%s"
+        cmd = "SELECT id, read_flag " \
+              "FROM messages " \
+              "WHERE id=%s"
         cur.execute(cmd, body["messageId"])
         response = cur.fetchone()
+        print(response)
         # Gotta be a better way to do the following line, but...
         try:
-            if not response["read"]:
+            if response["read_flag"] == b'\x00':
                 cmd = "UPDATE messages " \
-                      "SET read=TRUE" \
+                      "SET read_flag=TRUE " \
                       "WHERE id=%s"
                 cur.execute(cmd, body["messageId"])
                 response = {"error": 200}
+                connection.commit()
             else:
                 response = {"error": 400, "message": "Could not delete command - already acknowledged."}
         except KeyError:

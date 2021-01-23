@@ -9,13 +9,9 @@ Full license and documentation to be found at:
 https://github.com/ZAdamMac/pycharm
 """
 
-import argparse
-import bcrypt
-import json
 import getpass
 import os
 import pymysql
-import uuid
 
 __version__ = "odb-1"
 
@@ -25,8 +21,8 @@ spec_tables = [
       `name` VARCHAR(255) NOT NULL,
       `message` TEXT DEFAULT NULL,
       `errorlevel` CHAR(5) DEFAULT NULL,
-      `timestamp` TIMESTAMP,
-      `read` BIT DEFAULT 0,
+      `time_raised` TIMESTAMP,
+      `read_flag` BIT DEFAULT 0,
       PRIMARY KEY (`id`)
     )""",
 ]
@@ -78,22 +74,8 @@ def create_tables(list_tables, connection):
     connection.commit()
 
 
-def parse_args():
-    """Parse arguments and return the path to the json file."""
-    if __name__ == "__main__":
-        parser = argparse.ArgumentParser(description="""Do the thing!""")
-        parser.add_argument('json', help="Specify the path to an actions.json file to ingest.",
-                            action="store")
-        args = parser.parse_args()
-
-        path_json = args.json
-
-        return path_json
-
-
 if __name__ == "__main__":
     print("Now Creating Tables")
-    #json_path = parse_args()
     mariadb = connect_to_db()
     create_tables(spec_tables, mariadb)
     mariadb.commit()

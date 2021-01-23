@@ -14,6 +14,7 @@ import datetime
 import http.client
 import json
 
+
 class PyminderException(BaseException):
     pass
 
@@ -27,16 +28,18 @@ class PyminderService(object):
 
     def post_message(self, message, level):
         connection = http.client.HTTPConnection(host=self.host, port=self.port)
-        request_body = {
+        request_data = {
             "name": self.name,
             "message": message,
             "errorlevel": level,
             "timestamp": datetime.datetime.utcnow().isoformat(sep="T", timespec="seconds") + "Z",
         }
-        connection.request("POST", "/api/messages", body=request_body, headers={"x-pyminder-secret": self.pyminder_key})
+        request_body = json.dumps(request_data)
+        connection.request("POST", "/api/messages/", body=request_body, headers={"x-pyminder-secret": self.pyminder_key,
+                                                                                 "Content-type": "application/json"})
         resp = connection.getresponse()
         if resp.status != 200:  # We have encountered an error condition
-            raise PyminderException(message="Request failed: %s" % resp.status)
+            raise PyminderException()
 
     def info(self, message):
         self.post_message(message, "info")
