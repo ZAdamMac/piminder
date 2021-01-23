@@ -1,0 +1,4 @@
+bcrypt
+flask
+flask_restful
+pymysql

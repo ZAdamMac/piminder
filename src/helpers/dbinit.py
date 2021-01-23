@@ -93,7 +93,7 @@ def parse_args():
 
 if __name__ == "__main__":
     print("Now Creating Tables")
-    json_path = parse_args()
+    #json_path = parse_args()
     mariadb = connect_to_db()
     create_tables(spec_tables, mariadb)
     mariadb.commit()
