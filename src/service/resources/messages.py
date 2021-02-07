@@ -79,9 +79,39 @@ class MessageAPI(Resource):
         else:
             return {'message': 'unauthorized'}, 401
 
-    def delete(self):
+    def patch(self):
         """This will mark a specified message as read. The message is not wholly discarded immediately, but will be
         garbage-collected by a cron job run against the DB itself.
+
+        :return:
+        """
+        # deactivate (set permissions 0) a user if authenticated.
+        cookie = request.headers.get("x-pyminder-secret")
+        ttl = int(current_app.config["CLIENT_TTL"]) * 60
+        iss = current_app.config["NETWORK_LABEL"]
+        try:
+            connection = pymysql.connect(host=current_app.config["DBHOST"],
+                                         user=current_app.config["USERNAME"],
+                                         password=current_app.config["PASSPHRASE"],
+                                         db='pyminder',
+
+                                         cursorclass=pymysql.cursors.DictCursor)
+            connection.ping(reconnect=True)
+        except KeyError:
+            return {'message': 'Internal Server Error'}, 500
+        except pymysql.Error:
+            return {'message': 'Internal Server Error'}, 500
+        if check_system_secret(cookie, current_app.config['PYMINDER_SECRET']):
+            dict_return = messages_patch(request.get_json(), connection)
+            resp = make_response(dict_return)
+            resp.status_code = dict_return["error"]
+            resp.content_type = "application/json"
+            return resp
+        else:
+            return {'message': 'unauthorized'}, 401
+
+    def delete(self):
+        """This removes a selected message from the DB entirely.
 
         :return:
         """
@@ -172,7 +202,7 @@ def messages_post(body, connection):
     return response
 
 
-def messages_delete(body, connection):
+def messages_patch(body, connection):
     """This function indicates in the DB that a message has been read.
     A stored procedure or cron job will garbage collect."""
     cur = connection.cursor()
@@ -204,3 +234,67 @@ def messages_delete(body, connection):
         response = {"all_errors": errors, "error": 400}
 
     return response
+
+
+def messages_patch(body, connection):
+    """This function indicates in the DB that a message has been read.
+    A stored procedure or cron job will garbage collect."""
+    cur = connection.cursor()
+    dict_schema = {"messageId": ""}
+    json_valid, errors = json_validate(body, dict_schema)
+
+    if json_valid:
+        # First, make sure this hasn't already been executed.
+        cmd = "SELECT id, read_flag " \
+              "FROM messages " \
+              "WHERE id=%s"
+        cur.execute(cmd, body["messageId"])
+        response = cur.fetchone()
+        # Gotta be a better way to do the following line, but...
+        try:
+            if response["read_flag"] == b'\x00':
+                cmd = "UPDATE messages " \
+                      "SET read_flag=TRUE " \
+                      "WHERE id=%s"
+                cur.execute(cmd, body["messageId"])
+                response = {"error": 200}
+                connection.commit()
+            else:
+                response = {"error": 400, "message": "Could not mark message as read; already read."}
+        except KeyError:
+            response = {"error": 400, "message": "The indicated ID does not exist in the messages table."}
+    else:
+        response = {"all_errors": errors, "error": 400}
+
+    return response
+
+
+def messages_delete(body, connection):
+    """This function removes the selected entity from database prior to garbage collection."""
+    cur = connection.cursor()
+    dict_schema = {"messageId": ""}
+    json_valid, errors = json_validate(body, dict_schema)
+
+    if json_valid:
+        # First, make sure this hasn't already been executed.
+        cmd = "SELECT id" \
+              "FROM messages " \
+              "WHERE id=%s"
+        cur.execute(cmd, body["messageId"])
+        response = cur.fetchone()
+        # Gotta be a better way to do the following line, but...
+        try:
+            if response:
+                cmd = "DELETE FROM messages WHERE id=%s"
+                cur.execute(cmd, body["messageId"])
+                response = {"error": 200}
+                connection.commit()
+            else:
+                response = {"error": 400, "message": "Could not delete message, already deleted?"}
+        except KeyError:
+            response = {"error": 400, "message": "The indicated ID does not exist in the messages table."}
+    else:
+        response = {"all_errors": errors, "error": 400}
+
+    return response
+
