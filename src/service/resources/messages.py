@@ -168,6 +168,8 @@ def messages_get(connection):
             this_message.update({"read": False})
         else:
             this_message.update({"read": True})
+        time_out = this_message["timestamp"].strftime("%Y-%m-%dT%H:%M:%SZ")  # It is nice to have ISO 8601 compliance
+        this_message.update({"timestamp": time_out})
         response.update({str(counter): this_message})
     response.update({"error": 200})
 
@@ -245,9 +247,7 @@ def messages_patch(body, connection):
 
     if json_valid:
         # First, make sure this hasn't already been executed.
-        cmd = "SELECT id, read_flag " \
-              "FROM messages " \
-              "WHERE id=%s"
+        cmd = "SELECT id, read_flag FROM messages WHERE id=%s"
         cur.execute(cmd, body["messageId"])
         response = cur.fetchone()
         # Gotta be a better way to do the following line, but...
@@ -277,9 +277,7 @@ def messages_delete(body, connection):
 
     if json_valid:
         # First, make sure this hasn't already been executed.
-        cmd = "SELECT id" \
-              "FROM messages " \
-              "WHERE id=%s"
+        cmd = "SELECT id FROM messages WHERE id=%s"
         cur.execute(cmd, body["messageId"])
         response = cur.fetchone()
         # Gotta be a better way to do the following line, but...

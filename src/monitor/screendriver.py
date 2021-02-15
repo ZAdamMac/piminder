@@ -10,7 +10,7 @@ https://github.com/ZAdamMac/pyminder
 """
 
 from gfxhat import lcd, backlight
-import font
+from . import font
 
 
 def print_line(line_index, input_string):
@@ -62,7 +62,7 @@ def clear_screen():
     lcd.clear()
     lcd.show()
 
-
+# This small dictionary allows us to address the lines as lines of text rather than individual pixel-tall lines
 dict_absolute_line_indexes = {
     0: 0,
     1: 8,
