@@ -22,7 +22,7 @@ To use:
 1. instantiate a PyminderService object using the necessary configuration details:
    
 ```python3
-somehandler = helpers.PyminderService(service_name, hostname, hostport, shared_secret)
+somehandler = helpers.PyminderService(shared_secret, hostname, hostport, service_name)
 ```
 2. use the `.minor()`, `.major()`, and `.info()` methods of that object to post messages directly to the API, with the message as a string of arbitrary length.
 

@@ -63,7 +63,7 @@ def handle_input(ch, event):
     if ch == 5:  # "+" button, go to the next message
         current_index += 1
         current_line_index = 0
-    touched = 100
+    touched = 500
 
 
 def parse_args():
@@ -215,7 +215,8 @@ def runtime():
     while True:
         try:
             if touched == 0:
-                sleep(int(dict_config["refresh_interval_seconds"]))
+                list_messages = retrieve_messages(dict_config)
+                touched = 500
             else:
                 touched -= 1
             if delete_current:
@@ -224,8 +225,6 @@ def runtime():
             if mark_current_read:
                 list_messages = mark_read_message(dict_config, list_messages, current_index)
                 mark_current_read = False
-            if touched == 0:
-                list_messages = retrieve_messages(dict_config)
             if len(list_messages) != 0:
                 display_messages(list_messages, current_index, current_line_index, dict_config)
             else:
