@@ -10,7 +10,7 @@ Full license and documentation to be found at:
 https://github.com/ZAdamMac/pyminder
 """
 
-__version__ = "odb-1"
+__version__ = "v0.1.0"
 
 import argparse
 from configparser import ConfigParser

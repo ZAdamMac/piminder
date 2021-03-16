@@ -1,3 +1,3 @@
-__version__ = "odb-1"
+__version__ = "v0.1.0"
 
 from .classes import *
