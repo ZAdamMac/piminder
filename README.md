@@ -54,3 +54,21 @@ Each of these buttons also has a corresponding LED:
 - "+" indicates there is a message after this one.
 
 The LCD is backlit, and the colour is used to indicate message severity. By default, this is green for `info`, yellow for `minor`, and red for `major`. These values can be changed in `/src/monitor/monitor.conf` by providing a hex colour code in the HTML-standard format, eg `#123456`.
+
+## Special Font Characters
+The font is a UTF-8 font, though the full keyspace is not defined. Characters 32-126 (the normal printing range) is defined. In addition, 12 special characters are defined:
+
+|Python Escaped String Literal|Character Description|
+|-----------------------------|---------------------|
+|`\u128`|Envelope Icon|
+|`\u129`|Progress Bar, Left End, Empty|
+|`\u130`|Progress Bar, Left End, Filled|
+|`\u131`|Progress Bar, Middle, Empty|
+|`\u132`|Progress Bar, Middle, Full|
+|`\u133`|Progress Bar, Right End, Empty|
+|`\u134`|Progress Bar, Right End, Full|
+|`\u135`|Major Severity Icon (! in Triangle)|
+|`\u136`|Minor Severity Icon (? in Square)|
+|`\u137`|Info Severity Icon (i in Circle)|
+|`\u138`|Elipsis (...)|
+|`\u139`|Clock Icon|
