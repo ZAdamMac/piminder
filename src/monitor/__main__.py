@@ -10,7 +10,7 @@ Full license and documentation to be found at:
 https://github.com/ZAdamMac/pyminder
 """
 
-__version__ = "v0.1.0"
+__version__ = "0.1.0"
 
 import argparse
 from configparser import ConfigParser
@@ -35,7 +35,7 @@ def display_splash():
     length_break_seconds = 15
     disp.print_line(3, "Pyminder Monitor")
     disp.print_line(4, "v%s" % __version__)
-    disp.print_line(7, "Get Messages...")
+    disp.print_line(7, "Get Messages...\u008B")
     sleep(length_break_seconds)
 
 

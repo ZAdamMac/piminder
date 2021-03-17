@@ -60,15 +60,15 @@ The font is a UTF-8 font, though the full keyspace is not defined. Characters 32
 
 |Python Escaped String Literal|Character Description|
 |-----------------------------|---------------------|
-|`\u128`|Envelope Icon|
-|`\u129`|Progress Bar, Left End, Empty|
-|`\u130`|Progress Bar, Left End, Filled|
-|`\u131`|Progress Bar, Middle, Empty|
-|`\u132`|Progress Bar, Middle, Full|
-|`\u133`|Progress Bar, Right End, Empty|
-|`\u134`|Progress Bar, Right End, Full|
-|`\u135`|Major Severity Icon (! in Triangle)|
-|`\u136`|Minor Severity Icon (? in Square)|
-|`\u137`|Info Severity Icon (i in Circle)|
-|`\u138`|Elipsis (...)|
-|`\u139`|Clock Icon|
+|`\u0082`|Envelope Icon|
+|`\u0081`|Progress Bar, Left End, Empty|
+|`\u0082`|Progress Bar, Left End, Filled|
+|`\u0083`|Progress Bar, Middle, Empty|
+|`\u0084`|Progress Bar, Middle, Full|
+|`\u0085`|Progress Bar, Right End, Empty|
+|`\u0086`|Progress Bar, Right End, Full|
+|`\u0087`|Major Severity Icon (! in Triangle)|
+|`\u0088`|Minor Severity Icon (? in Square)|
+|`\u0089`|Info Severity Icon (i in Circle)|
+|`\u00BA`|Elipsis (...)|
+|`\u008B`|Clock Icon|
