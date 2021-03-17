@@ -174,10 +174,13 @@ def display_messages(list_messages, target_message, current_top_line, config):
         touch.set_led(2, 0)
     if severity.lower() == "info":
         disp.backlight_set_hue(config["info_color"])
+        service = "%-15s\u0089" % service
     elif severity.lower() == "major":
         disp.backlight_set_hue(config["major_error_color"])
+        service = "%-15s\u0087" % service
     elif severity.lower() == "minor":
         disp.backlight_set_hue(config["minor_error_color"])
+        service = "%-15s\u0088" % service
     body_wrapped = textwrap.wrap(body, 16)
     current_top_line = current_top_line % len(body_wrapped)
     if current_top_line == 0:
