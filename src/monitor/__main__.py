@@ -10,7 +10,7 @@ Full license and documentation to be found at:
 https://github.com/ZAdamMac/pyminder
 """
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 import argparse
 from configparser import ConfigParser
@@ -99,7 +99,7 @@ def retrieve_messages(configuration):
     resp = conn.getresponse()
     conn.close()
     dict_resp = json.loads(resp.read())
-    if dict_resp["error"] != 200:
+    if dict_resp["error"] not in [200, 400]:  # 400 just indicates that the message should not be marked read twice.
         disp.clear_screen()
         disp.print_line(0, "Retrieval Error:")
         disp.print_line(1, "HTTP %s" % dict_resp["error"])
@@ -125,7 +125,7 @@ def delete_message(configuration, list_messages, target_index):
     resp = conn.getresponse()
     conn.close()
     dict_resp = json.loads(resp.read())
-    if dict_resp["error"] != 200:
+    if dict_resp["error"] not in [200, 400]:  # 400 prevents double-deletion from being fatal.
         disp.clear_screen()
         disp.print_line(0, "Deletion Error:")
         disp.print_line(1, "HTTP %s" % dict_resp["error"])
@@ -147,7 +147,7 @@ def mark_read_message(configuration, list_messages, target_index):
     resp = conn.getresponse()
     conn.close()
     dict_resp = json.loads(resp.read())
-    if dict_resp["error"] != 200:
+    if dict_resp["error"] not in [200, 400]:  # 400 is an error but not fatal; just means the message got frobbed twice.
         disp.clear_screen()
         disp.print_line(0, "Marking Read Error:")
         disp.print_line(1, "HTTP %s" % dict_resp["error"])
