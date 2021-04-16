@@ -14,7 +14,7 @@ from flask import Flask
 from configparser import ConfigParser
 from os import environ
 
-__version__ = "prototype"
+__version__ = "v.0.1.2"
 
 
 def create_app(config_object):
@@ -61,4 +61,5 @@ def parse_config(path):
 if __name__ == "__main__":
     config = parse_config("pyminder-service.conf")
     app = create_app(config)
-    app.run(host=config.LISTENIP, port=config.LISTENPORT, debug=True)
+    app.run(host=config.LISTENIP, port=config.LISTENPORT, debug=config.DEBUG,
+            ssl_context=(config.SSL_CERT, config.SSL_KEY))
