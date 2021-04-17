@@ -211,6 +211,9 @@ def display_messages(list_messages, target_message, current_top_line, config):
 def obtain_ssl_context(config):
     if bool(config["custom_cert"]):
         ssl_context = ssl.create_default_context(cafile=config["trusted_cert"])
+        if bool(config["allow_self-signed_certs"]):
+            ssl_context.check_hostname = False
+            ssl_context.verify_mode = ssl.CERT_NONE
     else:
         ssl_context = ssl.create_default_context()
 

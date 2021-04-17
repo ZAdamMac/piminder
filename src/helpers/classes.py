@@ -13,6 +13,7 @@ https://github.com/ZAdamMac/pyminder
 import datetime
 import http.client
 import json
+import ssl
 
 
 class PyminderException(BaseException):
@@ -20,14 +21,18 @@ class PyminderException(BaseException):
 
 
 class PyminderService(object):
-    def __init__(self, shared_secret, host, port, service_name):
+    def __init__(self, shared_secret, host, port, service_name, cert_path=None, self_signed=False):
         self.pyminder_key = shared_secret
         self.host = str(host)
         self.port = int(port)
         self.name = str(service_name)
+        self.ssl_context = ssl.create_default_context(capath=cert_path)
+        if self_signed:
+            self.ssl_context.check_hostname = False
+            self.ssl_context.verify_mode = ssl.CERT_NONE
 
     def post_message(self, message, level):
-        connection = http.client.HTTPConnection(host=self.host, port=self.port)
+        connection = http.client.HTTPSConnection(host=self.host, port=self.port, context=self.ssl_context)
         request_data = {
             "name": self.name,
             "message": message,
