@@ -209,11 +209,10 @@ def display_messages(list_messages, target_message, current_top_line, config):
 
 
 def obtain_ssl_context(config):
-    ssl_context = ssl.SSLContext()
-    if config["CUSTOM_CERT"]:
-        ssl_context.load_cert_chain(certfile=config["TRUSTED_CERT"])
+    if bool(config["custom_cert"]):
+        ssl_context = ssl.create_default_context(cafile=config["trusted_cert"])
     else:
-        ssl_context.load_default_certs()
+        ssl_context = ssl.create_default_context()
 
     return ssl_context
 
