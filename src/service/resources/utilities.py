@@ -4,7 +4,7 @@ This resource is a collection of helper classes which are imported selectively
 into other resources that make up part of pyminder, to commonize handling tasks.
 
 Author: Zac Adam-MacEwen (zadammac@kenshosec.com)
-A Kensho Security Labs utility.
+An Arcana Labs utility.
 
 Produced under license.
 Full license and documentation to be found at:
@@ -13,137 +13,6 @@ https://github.com/ZAdamMac/Enumpi-C2
 
 import base64
 import bcrypt
-import datetime
-import hashlib
-import hmac
-import json
-
-
-class UserModel(object):
-    def __init__(self):
-        """For sanity reasons, always init a blank user."""
-        self.uid = None
-        self.name = None
-        self.fname = None
-        self.lname = None
-        self.email = None
-        self.new_password = None
-        self.force_reset = None
-        self.can_login = None
-        self.can_report = None
-        self.can_command = None
-        self.can_grant = None
-        self.can_users = None
-        self.last_active = None
-
-    def from_json(self, s_json):
-        """Initializes a user object from JSON, such as would be supplied by
-        the create and modify user utilities. Do not use without validating
-        the json string with json_validate and the appropriate dictionary.
-
-        :param s_json: the string of serialized json to be used.
-        """
-        d_json = s_json
-        self.uid = d_json["userId"]
-        self.name = d_json["username"]
-        self.fname = d_json["firstName"]
-        self.lname = d_json["lastName"]
-        self.email = d_json["email"]
-        self.new_password = d_json["newPwd"]
-        self.force_reset = bool(d_json["forceResetPwd"])
-        permissions = d_json["permissions"]
-        self.can_login = permissions["active"]
-        self.can_report = permissions["useReportingApi"]
-        self.can_command = permissions["canIssueCommands"]
-        self.can_grant = permissions["canModifyClients"]
-        self.can_users = permissions["isUserAdmin"]
-
-    def from_dict(self, d_user):
-        """Initialize using a dictionary of the sort returned by pymysql's
-        DictCursor cursor class. Expects the actual dictionary of a single
-        row. Use fetchone() iteratively or fetchall then iterate over the
-        return.
-
-        :param d_user: a dictionary.
-        :return:
-        """
-        self.uid = d_user["user_id"]
-        self.name = d_user["username"]
-        self.fname = d_user["fname"]
-        self.lname = d_user["lname"]
-        self.email = d_user["email"]
-        self.force_reset = d_user["pw_reset"]
-        self.last_active = d_user["bearer_token_expiry"]
-        s_permissions = bin(d_user["access"]).lstrip('0b')
-
-        # Have to enforce a string length or bugs happen!
-        bits = len(s_permissions)
-        missing = 5-bits  # FUTURE: If adding bits to access, change this int!
-        padding = ''
-        if missing > 0:
-            for i in range(missing):
-                padding += '0'
-        s_permissions = padding+s_permissions
-
-        self.can_login = bool(int(s_permissions[0]))
-        self.can_report = bool(int(s_permissions[1]))
-        self.can_command = bool(int(s_permissions[2]))
-        self.can_grant = bool(int(s_permissions[3]))
-        self.can_users = bool(int(s_permissions[4]))
-
-    def dump_json(self, serialize=True):
-        """Takes the current state of the user object and returns it in a
-        spec-compliant, serialized JSON object unless overridden.
-        """
-        d_json = {
-            "userId": self.uid,
-            "username": self.name,
-            "firstName": self.fname,
-            "lastName": self.lname,
-            "email": self.email,
-            "forceResetPwd": bool(self.force_reset),
-            "permissions": {
-                "active": self.can_login,
-                "useReportingApi": self.can_report,
-                "canIssueCommands": self.can_command,
-                "canModifyClients": self.can_grant,
-                "isUserAdmin": self.can_users
-            },
-            "lastActive": self.last_active
-        }
-        if serialize:
-            out = json.dumps(d_json)
-        else:
-            out = d_json
-        return out
-
-    def dump_dict(self):
-        """Return current state of the object as a dictionary suitable for use
-        with the database. Collapses permissions back into an integer and pre-
-        salted-hashes the new password value, if any."""
-        if self.new_password:
-            salty_pass = bcrypt.hashpw(self.new_password.encode("utf-8"), bcrypt.gensalt())
-        else:
-            salty_pass = None
-
-        str_access = ''  # We need to turn this back to an int.
-        permissions = [self.can_login, self.can_report, self.can_command,
-                       self.can_grant, self.can_users]  # Lists are reliably ordered.
-        for each in permissions:
-            str_access += str(int(each))
-        int_access = int(str_access, 2)
-
-        d_user = {
-            "user_id": self.uid,
-            "email": self.email,
-            "username": self.name,
-            "fname": self.fname,
-            "lname": self.lname,
-            "passwd": salty_pass,
-            "pw_reset": self.force_reset,
-            "access": int_access
-        }
-        return d_user
 
 
 def authenticated_exec(token_id, permission, connection, func, body):
@@ -155,20 +24,19 @@ def authenticated_exec(token_id, permission, connection, func, body):
     the database connection as its only arguments and in that order.
 
     :param token_id: the value returned by token_validate[0].
-    :param permission: A string matching the permission attribute to check
+    :param permission: The integer representing the minimum permission level (1-3) needed to achieve this task.
     :param connection: a database connection object.
     :param func: the function to be executed if the client is permitted
     :param body: the json body of the request.
     :return: the response body to be sent to the remote user.
     """
     cur = connection.cursor()
-    requestor = UserModel()
-    cmd = "SELECT * FROM users WHERE user_id=%s"
+    cmd = "SELECT * FROM users WHERE username=%s"
     cur.execute(cmd, token_id)
     d_user = cur.fetchone()
-    requestor.from_dict(d_user)
+    user_permission_level = d_user["permlevel"]
 
-    if requestor.can_login and requestor.__getattribute__(permission):
+    if user_permission_level >= permission:  # This is a highly simplistic check, but it works.
         response = func(body, connection)
         connection.commit()
         connection.close()
@@ -179,58 +47,39 @@ def authenticated_exec(token_id, permission, connection, func, body):
     return response
 
 
-def check_system_secret(cookie, expected):
-    """
-    Accepts the noted arguments to determine if a given user may take an action
-    and then allows them to execute it.
+def basic_auth(token, db_connect):
+    """A simplistic function to handle breaking a basic auth token into the requisite connections and testing them
+    against the database in a simplistic way. returns true or false depending on validtity, along with a username
 
-    For this to work the function in question should accept the json body and
-    the database connection as its only arguments and in that order.
-
-    :param token_id: the value returned by token_validate[0].
-    :param permission: A string matching the permission attribute to check
-    :param connection: a database connection object.
-    :param func: the function to be executed if the client is permitted
-    :param body: the json body of the request.
-    :return: the response body to be sent to the remote user.
-    """
-    if cookie == expected:
-        return True
-    else:
-        return False
-
-
-def build_auth_token(ttl, key, uuid, iss, aud):
-    """Minimal tool for quickly generating a JWT and returning it along with
-    the associated expiry timestamp. Built as a utility function so that it
-    can be reused in all associated token operations. Signs tokens with HMAC
-    SHA256.
-
-    :param ttl: int minutes until expiry
-    :param key: bytes random key used in the signing operation.
-    :param uuid: UUID argued in as subject. Should be the associated user or
-    client id.
-    :param iss: Argued to issuer - defined in config.
-    :param aud: One of "client" or "user".
+    :param token: the value from the authorization header
+    :param db_connect: a pymysql database connection.
     :return:
     """
-    expiry = (datetime.datetime.now() + datetime.timedelta(minutes=ttl)).timestamp()
-    header = {
-        "alg": "HS256",
-        "type": "JWT"
-    }
-    body = {
-        "iss": iss,
-        "sub": uuid,
-        "aud": aud,
-        "exp": expiry
-    }
-    msg_a = base64.b64encode(json.dumps(header).encode('utf-8')).decode('utf-8')
-    msg_b = base64.b64encode(json.dumps(body).encode('utf-8')).decode('utf-8')
-    msg = msg_a + "." + msg_b
-    sig = hmac.new(key, msg.encode('utf-8'), digestmod=hashlib.sha256).hexdigest().upper()
-    token = msg+"."+sig
-    return token, expiry
+
+    list_token_components = token.split(" ")  # never assume a sane input
+    token_type = list_token_components[0]     # Authorization headers standard would expect this
+    token_value = list_token_components[1]    # In basic, this will be the actual token.
+    token_decoded = base64.b64decode(token_value).decode('utf8')
+    token_decoded = token_decoded.split(":")
+    if token_type.lower() == "basic":  # Secondary sanity check; this should probably be filtered off somewhere else
+        username = token_decoded[0]
+        password = token_decoded[1].encode('utf8')
+
+        command = "SELECT password FROM users WHERE username=%s"
+        cur = db_connect.cursor()
+        cur.execute(command, username)
+        dict_stored_password = cur.fetchone()
+        if dict_stored_password:  # We need a sanity check in case the user doesn't exist.
+            stored_password = dict_stored_password["password"].encode('utf8')
+        else:
+            return False, username
+
+        if bcrypt.checkpw(password, stored_password):
+            return True, username
+        else:
+            return False, username
+    else:  # In this case, we're looking at a token type we don't know how to handle with this function.
+        return False, "invalid_authtype"
 
 
 def json_validate(test_json, dict_schema):
@@ -271,70 +120,3 @@ def json_validate(test_json, dict_schema):
             for error in list_response:
                 dict_response.update(error)
             return False, dict_response
-
-
-def token_validate(cookie, ttl, db_conn, new_key, iss, aud, t_type):
-    """Sort of a malnamed function. Both validates the argued token and
-    returns a tuple depending on the results. If the token is invalid it
-    returns the tuple (False, None), else it will return (users.user_id, new
-    token).
-
-    :param cookie: A cookie provided by the calling endpoint.
-    :param ttl: The relevant time to live value. The bearer token will be
-    re-issued with an extended time based on this time to live.
-    :param db_conn: A database connection, assumed to have default DictCursor
-    :param new_key: A bytestring value, should be os.urandom(64)
-    :param iss: The network label value from global app config.
-    :param aud: The audience value, either "user" or "client"
-    :param t_type: String, one of "bearer" or "refresh", determining which is
-    checked by the application.
-    :return:
-    """
-    # First, dismantle the cookie and reconstruct our primitives
-    header, body, sig = cookie.split(".")
-    dict_body = base64.b64decode(body.encode('utf-8'))
-    obj_body = json.loads(dict_body.decode('utf-8'))
-    msg = header + "." + body
-
-    # Now, retrieve the relevant user from the db as a dictionary.
-    # This is possible because we're defaulting to DictCursor for this project.
-    curr = db_conn.cursor()
-    if aud == "user":
-        cmd = "SELECT * FROM users WHERE user_id=%s"
-    else:
-        cmd = "SELECT * FROM client_grants WHERE client_id=%s"
-    uid = obj_body["sub"]
-    length = curr.execute(cmd, uid)
-    if length == 0:
-        return False, None  # Should never happen, but might with a forged JWT
-    dict_user = curr.fetchone()  # user_id is a unique value, will never be more than 1
-
-    # Technically we could trust the expiry in the token, but I ain't about that life.
-    exp_current = dict_user[("%s_token_expiry" % t_type)]
-    if datetime.datetime.now() < exp_current:  # Token is not expired
-        time_valid = True
-    else:
-        time_valid = False
-
-    # Now we need to determine if the key is valid.
-    if time_valid:
-        key = dict_user[("%s_token_key" % t_type)]
-        sig_expected = hmac.new(key, msg.encode('utf-8'), digestmod=hashlib.sha256).hexdigest().upper()
-        if sig == sig_expected:
-            sig_valid = True
-        else:
-            sig_valid = False
-    else:
-        sig_valid = False
-
-    if time_valid and sig_valid:
-        new_token, new_expiry = build_auth_token(ttl=ttl, key=new_key, uuid=uid, iss=iss, aud=aud)
-        if aud == "user":
-            cmd = "UPDATE users SET bearer_token_key=%s, bearer_token_expiry=FROM_UNIXTIME(%s) WHERE user_id=%s"
-        elif aud == "client":
-            cmd = "UPDATE client_grants SET bearer_token_key=%s, bearer_token_expiry=FROM_UNIXTIME(%s) WHERE client_id=%s"
-        curr.execute(cmd, (new_key, new_expiry, uid))
-        db_conn.commit()
-        return uid, new_token
-    else:
-        return False, None
