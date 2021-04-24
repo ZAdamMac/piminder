@@ -10,6 +10,7 @@ Full license and documentation to be found at:
 https://github.com/ZAdamMac/pyminder
 """
 
+import base64
 import datetime
 import http.client
 import json
@@ -21,8 +22,9 @@ class PyminderException(BaseException):
 
 
 class PyminderService(object):
-    def __init__(self, shared_secret, host, port, service_name, cert_path=None, self_signed=False):
-        self.pyminder_key = shared_secret
+    def __init__(self, username, password, host, port, service_name, cert_path=None, self_signed=False):
+        auth_precode = username + ":" + password
+        self.pyminder_key = "Basic %s" % (base64.b64encode(auth_precode.encode('utf8')).decode('utf8'))
         self.host = str(host)
         self.port = int(port)
         self.name = str(service_name)
@@ -40,7 +42,7 @@ class PyminderService(object):
             "timestamp": datetime.datetime.utcnow().isoformat(sep="T", timespec="seconds") + "Z",
         }
         request_body = json.dumps(request_data)
-        connection.request("POST", "/api/messages/", body=request_body, headers={"x-pyminder-secret": self.pyminder_key,
+        connection.request("POST", "/api/messages/", body=request_body, headers={"Authorization": self.pyminder_key,
                                                                                  "Content-type": "application/json"})
         resp = connection.getresponse()
         if resp.status != 200:  # We have encountered an error condition
