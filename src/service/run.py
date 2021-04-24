@@ -4,7 +4,8 @@ It is the app-defining component of the Flask-based API system, and brings the
 system up by parsing the config and feeding it back into the app framework
 itself.
 Author: Zac Adam-MacEwen (zadammac@kenshosec.com)
-A Kensho Security Labs utility.
+
+An Arcana Labs utility.
 Produced under license.
 Full license and documentation to be found at:
 https://github.com/ZAdamMac/pyminder
@@ -14,7 +15,7 @@ from flask import Flask
 from configparser import ConfigParser
 from os import environ
 
-__version__ = "prototype"
+__version__ = "v.0.2.0"  # This is the most recent version of the service that this script can initialize.
 
 
 def create_app(config_object):
@@ -61,4 +62,5 @@ def parse_config(path):
 if __name__ == "__main__":
     config = parse_config("pyminder-service.conf")
     app = create_app(config)
-    app.run(host=config.LISTENIP, port=config.LISTENPORT, debug=True)
+    app.run(host=config.LISTENIP, port=config.LISTENPORT, debug=config.DEBUG,
+            ssl_context=(config.SSL_CERT, config.SSL_KEY))

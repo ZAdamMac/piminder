@@ -10,16 +10,19 @@ Full license and documentation to be found at:
 https://github.com/ZAdamMac/pyminder
 """
 
-__version__ = "0.1.1"
+__version__ = "0.2.0"
 
 import argparse
+import base64
 from configparser import ConfigParser
+import getpass
 from gfxhat import touch
 import http.client
 import json
+from os import environ
 from time import sleep
 from . import screendriver as disp
-import signal
+import ssl
 import textwrap
 from datetime import datetime as dt
 
@@ -28,7 +31,7 @@ current_index = 0  # For safety reasons, both these two indexes must be modulate
 current_line_index = 0
 mark_current_read = False
 delete_current = False
-touched = 0  # A number of process cycles before the system will go back into standby mode. Done to prevent API hammering
+touched = 0  # A number of process cycles before the system will go back into standby mode. Prevents API hammering
 
 
 def display_splash():
@@ -88,13 +91,25 @@ def parse_config(config_path):
             value = parser.get(section, option)
             vars_config.update({option: value})
 
+    try:
+        monitor_username = environ['MONITOR_UID']
+    except KeyError:
+        monitor_username = input("Monitor Username: ")
+    try:
+        monitor_password = environ['MONITOR_PASSWORD']
+    except:
+        monitor_password = getpass.getpass("Monitor Password: ")
+
+    auth_precode = monitor_username + ":" + monitor_password
+    vars_config["authorization"] = "Basic %s" % (base64.b64encode(auth_precode.encode('utf8')).decode('utf8'))
+
     return vars_config
 
 
-def retrieve_messages(configuration):
+def retrieve_messages(configuration, ssl_context):
     conf = configuration
-    conn = http.client.HTTPConnection(conf["service_host"], int(conf["service_port"]))
-    conn.request("GET", "/api/messages/", headers={"x-pyminder-secret": conf["shared_secret"],
+    conn = http.client.HTTPSConnection(conf["service_host"], int(conf["service_port"]), context=ssl_context)
+    conn.request("GET", "/api/messages/", headers={"Authorization": conf["authorization"],
                                                    "Content-type": "application/json"})
     resp = conn.getresponse()
     conn.close()
@@ -113,15 +128,15 @@ def retrieve_messages(configuration):
     return list_msg
 
 
-def delete_message(configuration, list_messages, target_index):
+def delete_message(configuration, list_messages, target_index, ssl_context):
     target_index = target_index % len(list_messages)
     conf = configuration
     target_mid = list_messages[target_index]["messageId"]
-    foo = list_messages.pop(target_index)  # this simply removes the message from list_messages
+    list_messages.pop(target_index)  # this simply removes the message from list_messages
     body_out = "{\"messageId\":\"%s\"}" % target_mid
-    conn = http.client.HTTPConnection(conf["service_host"], int(conf["service_port"]))
-    conn.request("DELETE", "/api/messages/", headers={"x-pyminder-secret": conf["shared_secret"],
-                                                   "Content-type": "application/json"}, body=body_out)
+    conn = http.client.HTTPSConnection(conf["service_host"], int(conf["service_port"]), context=ssl_context)
+    conn.request("DELETE", "/api/messages/", headers={"Authorization": conf["authorization"],
+                                                      "Content-type": "application/json"}, body=body_out)
     resp = conn.getresponse()
     conn.close()
     dict_resp = json.loads(resp.read())
@@ -131,29 +146,29 @@ def delete_message(configuration, list_messages, target_index):
         disp.print_line(1, "HTTP %s" % dict_resp["error"])
         disp.print_line(2, "Fatal, exiting.")
         exit(1)
-    updated_messages = retrieve_messages(configuration)  # Fetching the messages immediately forces a screen update
+    updated_messages = retrieve_messages(configuration, ssl_context)  # Fetching the messages forces a screen update
 
     return updated_messages
 
 
-def mark_read_message(configuration, list_messages, target_index):
+def mark_read_message(configuration, list_messages, target_index, ssl_context):
     target_index = target_index % len(list_messages)
     conf = configuration
     target_mid = list_messages[target_index]["messageId"]
     body_out = "{\"messageId\":\"%s\"}" % target_mid
-    conn = http.client.HTTPConnection(conf["service_host"], int(conf["service_port"]))
-    conn.request("PATCH", "/api/messages/", headers={"x-pyminder-secret": conf["shared_secret"],
-                                                   "Content-type": "application/json"}, body=body_out)
+    conn = http.client.HTTPSConnection(conf["service_host"], int(conf["service_port"]), context=ssl_context)
+    conn.request("PATCH", "/api/messages/", headers={"Authorization": conf["authorization"],
+                                                     "Content-type": "application/json"}, body=body_out)
     resp = conn.getresponse()
     conn.close()
     dict_resp = json.loads(resp.read())
-    if dict_resp["error"] not in [200, 400]:  # 400 is an error but not fatal; just means the message got frobbed twice.
+    if dict_resp["error"] not in [200, 400]:  # 400 is an error but not fatal; just means the message got hit twice.
         disp.clear_screen()
         disp.print_line(0, "Marking Read Error:")
         disp.print_line(1, "HTTP %s" % dict_resp["error"])
         disp.print_line(2, "Fatal, exiting.")
         exit(1)
-    updated_messages = retrieve_messages(configuration) # fetching the messages immediately forces a screen update.
+    updated_messages = retrieve_messages(configuration, ssl_context)  # fetching the messages forces a screen update.
 
     return updated_messages
 
@@ -208,25 +223,39 @@ def display_messages(list_messages, target_message, current_top_line, config):
             disp.print_line(2+each, "")
 
 
+def obtain_ssl_context(config):
+    if bool(config["custom_cert"]):
+        ssl_context = ssl.create_default_context(cafile=config["trusted_cert"])
+        if bool(config["allow_self-signed_certs"]):
+            ssl_context.check_hostname = False
+            ssl_context.verify_mode = ssl.CERT_NONE
+    else:
+        ssl_context = ssl.create_default_context()
+
+    return ssl_context
+
+
 def runtime():
     global current_index, current_line_index, mark_current_read, delete_current, touched
     path_config = parse_args()  # Since the monitor is callable (I _think_) from modules, we need to know where .cfg is
     dict_config = parse_config(path_config)  # If there was ever a kenshosec code smell, it's returning cfg as a dict
+    ssl_context = obtain_ssl_context(dict_config)
     enable_touch()  # each button needs its own handler so we can't just loop.
     disp.backlight_set_hue(dict_config["color_resting"])
     display_splash()  # The delay for the splash screen display is set in display_splash as a constant.
+    list_messages = []  # To avoid a race condition that can cause a crash.
     while True:
         try:
             if touched == 0:
-                list_messages = retrieve_messages(dict_config)
+                list_messages = retrieve_messages(dict_config, ssl_context)
                 touched = 500
             else:
                 touched -= 1
             if delete_current:
-                list_messages = delete_message(dict_config, list_messages, current_index)
+                list_messages = delete_message(dict_config, list_messages, current_index, ssl_context)
                 delete_current = False
             if mark_current_read:
-                list_messages = mark_read_message(dict_config, list_messages, current_index)
+                list_messages = mark_read_message(dict_config, list_messages, current_index, ssl_context)
                 mark_current_read = False
             if len(list_messages) != 0:
                 display_messages(list_messages, current_index, current_line_index, dict_config)
