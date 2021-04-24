@@ -10,13 +10,16 @@ Full license and documentation to be found at:
 https://github.com/ZAdamMac/pyminder
 """
 
-__version__ = "0.1.2"
+__version__ = "0.2.0"
 
 import argparse
+import base64
 from configparser import ConfigParser
+import getpass
 from gfxhat import touch
 import http.client
 import json
+from os import environ
 from time import sleep
 from . import screendriver as disp
 import ssl
@@ -88,13 +91,25 @@ def parse_config(config_path):
             value = parser.get(section, option)
             vars_config.update({option: value})
 
+    try:
+        monitor_username = environ['MONITOR_UID']
+    except KeyError:
+        monitor_username = input("Monitor Username: ")
+    try:
+        monitor_password = environ['MONITOR_PASSWORD']
+    except:
+        monitor_password = getpass.getpass("Monitor Password: ")
+
+    auth_precode = monitor_username + ":" + monitor_password
+    vars_config["authorization"] = "Basic %s" % (base64.b64encode(auth_precode.encode('utf8')).decode('utf8'))
+
     return vars_config
 
 
 def retrieve_messages(configuration, ssl_context):
     conf = configuration
     conn = http.client.HTTPSConnection(conf["service_host"], int(conf["service_port"]), context=ssl_context)
-    conn.request("GET", "/api/messages/", headers={"x-pyminder-secret": conf["shared_secret"],
+    conn.request("GET", "/api/messages/", headers={"Authorization": conf["authorization"],
                                                    "Content-type": "application/json"})
     resp = conn.getresponse()
     conn.close()
@@ -120,7 +135,7 @@ def delete_message(configuration, list_messages, target_index, ssl_context):
     list_messages.pop(target_index)  # this simply removes the message from list_messages
     body_out = "{\"messageId\":\"%s\"}" % target_mid
     conn = http.client.HTTPSConnection(conf["service_host"], int(conf["service_port"]), context=ssl_context)
-    conn.request("DELETE", "/api/messages/", headers={"x-pyminder-secret": conf["shared_secret"],
+    conn.request("DELETE", "/api/messages/", headers={"Authorization": conf["authorization"],
                                                       "Content-type": "application/json"}, body=body_out)
     resp = conn.getresponse()
     conn.close()
@@ -142,7 +157,7 @@ def mark_read_message(configuration, list_messages, target_index, ssl_context):
     target_mid = list_messages[target_index]["messageId"]
     body_out = "{\"messageId\":\"%s\"}" % target_mid
     conn = http.client.HTTPSConnection(conf["service_host"], int(conf["service_port"]), context=ssl_context)
-    conn.request("PATCH", "/api/messages/", headers={"x-pyminder-secret": conf["shared_secret"],
+    conn.request("PATCH", "/api/messages/", headers={"Authorization": conf["authorization"],
                                                      "Content-type": "application/json"}, body=body_out)
     resp = conn.getresponse()
     conn.close()
