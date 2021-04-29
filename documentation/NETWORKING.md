@@ -1,0 +1,17 @@
+# Network Security and Pyminder
+For various reasons it can be useful to operate pyminder in a manner where it is listening to a broader selection of network interfaces than simply the device local host. For this reason, in an earlier development version, TLS 1.2 support was added to the service and all necessary helpers. Use of the utility without TLS support is highly discouraged, and would require modification of the monitor and helper code.
+
+Even with Transport Layer Security, it is not recommended to expose Pyminder to the open internet. Our recommended implimentation is to do either of the following:
+
+1. Run `pyminder_service` directly on the host Pi that will be running `pyminder_monitor`, configured to listen only to `localhost` by setting the `Pyminder_Host` or `LISTENHOST` values accordingly. In this case a self-signed certificate could be used (which the operator would have to generate), which is not recommended, but also minimally risky so long as no other web-facing applications are running on the PI.
+2. If resources permit, `pyminder_service` can be run as a containerized service with a seperate database container - the exact arrangement for this is discussed in more detail in the service-setup documentation. If this arrangement is placed behind a correctly-configured [nginx-proxy](https://hub.docker.com/r/jwilder/nginx-proxy) service, traffic from the wider internet can be prevented from reaching pyminder while the afforded internet access could be used to obtain a CA-Backed Certificate.
+
+## CA Certificates Are Preferred
+There are a number of reasons to prefer a TLS certificate backed by a Certificate Authority, the primary of which is convenience. In the second configuration described above, the process can be fully automated and operate transparantly to the operator, so long as the operator can spare a subdomain on an internet-accessible domain (ie, not `.local`) for the challenge-response process. Additionally and in the same category, CA root certificates are already listed as trusted in most devices that support TLS, meaning there is no messing about with PKI or other certificate distribution schemes to all the various devices on your network that would need to talk to the pyminder service.
+
+There are also security considerations. For very good reasons, creating certificates that have the common name "localhost" is discouraged. What's more, even if the certificate was bound to some local domain name (if you were using hostfile bindings or ran local DNS, for example), it would be on you to ensure that the private key stayed private to pyminder and that the certificates were distributed to all services in question, and in a timely manner.
+
+Some applications of private labs do call for becoming your own CA, but those applications fall beyond the scope of this project.
+
+## The Application Runs in Flask
+Please note that `pyminder_service` runs directly in flask. This can lead to issues with reliability under load as the application is intended for development rather than production use. This can be mitigated to a degree with load balancing, but if push came to shove it would be better to replace flask entirely with a proper service.

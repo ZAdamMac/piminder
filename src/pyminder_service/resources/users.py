@@ -76,7 +76,7 @@ class UsersAPI(Resource):
         else:
             return {'message': 'unauthorized'}, 401
 
-    def patch(self):  # TODO Resume Here
+    def patch(self):
         """This will mark a specified message as read. The message is not wholly discarded immediately, but will be
         garbage-collected by a cron job run against the DB itself.
 
