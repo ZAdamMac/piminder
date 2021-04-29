@@ -5,7 +5,7 @@ with open("../README.md", "r") as f:
 
 setup(name='pyminder',
       version='0.2.0',
-      description='Scripts for reporting errors to a pyminder service',
+      description='Pyminder is a special network messanging service for status alerts.',
       long_description=long_description,
       author='Zac Adam-MacEwen',
       author_email='zadammac@kenshosec.com',
