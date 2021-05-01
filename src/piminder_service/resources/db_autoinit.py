@@ -1,13 +1,12 @@
 """
-This script is a component of pycharm's back-end controller.
-Specifically, it is a helper utility to be used to intialize a database for
-the C2 service to operate from, provided a few basic arguments.
+This script is a component of Piminder's back-end controller.
+Specifically, it is a helper utility to be used to intialize a database for the user and message tables.
 Author: Zac Adam-MacEwen (zadammac@kenshosec.com)
 
 An Arcana Labs utility.
 Produced under license.
 Full license and documentation to be found at:
-https://github.com/ZAdamMac/pyminder
+https://github.com/ZAdamMac/Piminder
 """
 
 import bcrypt
@@ -15,7 +14,7 @@ import getpass
 import os
 import pymysql
 
-__version__ = "0.2.0"  # This is the version of service that we can init, NOT the version of the script itself.
+__version__ = "1.0.0"  # This is the version of service that we can init, NOT the version of the script itself.
 
 spec_tables = [
     """CREATE TABLE `messages` (
@@ -44,18 +43,24 @@ def connect_to_db():
     """
     print("We must now connect to the database.")
     try:
-        db_user = os.environ['PYMINDER_DB_USER']
+        db_user = os.environ['PIMINDER_DB_USER']
     except KeyError:
-        db_user = input("Username: ")
+        print("Missing envvar: Piminder_DB_USER")
+        exit(1)
     root_password = None
     try:
-        root_password = os.environ['PYMINDER_DB_PASSWORD']
+        root_password = os.environ['PIMINDER_DB_PASSWORD']
     except KeyError:
-        print("The DB password was not pasted into the environment variables.")
-        root_password = getpass.getpass("Password: ")
+        print("Missing envvar: Piminder_DB_PASSWORD")
+        exit(1)
+    try:
+        db_host = os.environ['PIMINDER_DB_HOST']
+    except KeyError:
+        print("Missing envvar: Piminder_DB_HOST")
+        exit(1)
     finally:
-        conn = pymysql.connect(host='127.0.0.1', user=db_user,
-                               password=root_password, db='pyminder',
+        conn = pymysql.connect(host=db_host, user=db_user,
+                               password=root_password, db='Piminder',
                                charset='utf8mb4', cursorclass=pymysql.cursors.DictCursor)
 
     return conn
@@ -92,23 +97,24 @@ def create_administrative_user(connection):
 
     print("Validating an admin user exists:")
     try:
-        admin_name = os.environ['PYMINDER_ADMIN_USER']
+        admin_name = os.environ['PIMINDER_ADMIN_USER']
     except KeyError:
-        admin_name = input("Username: ")
-    root_password = None
+        print("Missing envvar: Piminder_ADMIN_USER")
+        exit(1)
 
     cur = connection.cursor()
-    command = "SELECT count(username) AS howmany FROM users WHERE username like %s;"
-    cur.execute(command, admin_name)
+    command = "SELECT count(username) AS howmany FROM users WHERE permlevel like 3;"
+    # Wait, how many admins are there?
+    cur.execute(command)
     count = cur.fetchone()["howmany"]
 
-    if count < 1:
+    if count < 1:  # Only do this if no more than 0 exists.
         command = "INSERT INTO users (username, password, memo, permlevel) VALUES (%s, %s, 'Default User', 3);"
         try:
-            root_password = os.environ['PYMINDER_ADMIN_PASSWORD']
+            root_password = os.environ['PIMINDER_ADMIN_PASSWORD']
         except KeyError:
-            print("The admin password was not pasted into the environment variables.")
-            root_password = getpass.getpass("Password: ")
+            print("Missing envvar: Piminder_ADMIN_PASSWORD")
+            exit(1)
         hashed_rootpw = bcrypt.hashpw(root_password.encode('utf8'), bcrypt.gensalt())
         cur.execute(command, (admin_name, hashed_rootpw))
         print("Created administrative user: %s" % admin_name)
@@ -117,7 +123,7 @@ def create_administrative_user(connection):
     connection.commit()
 
 
-if __name__ == "__main__":
+def runtime():
     print("Now Creating Tables")
     mariadb = connect_to_db()
     create_tables(spec_tables, mariadb)

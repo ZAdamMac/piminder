@@ -1,12 +1,12 @@
 """
-This script is a component of the monitoring service for the Pyminder alert management utility..
+This script is a component of the monitoring service for the Piminder alert management utility..
 It is the full set of display drivers for interfacing between the monitor code and the screen itself.
 
 Author: Zac Adam-MacEwen (zadammac@kenshosec.com)
 A Kensho Security Labs utility.
 Produced under license.
 Full license and documentation to be found at:
-https://github.com/ZAdamMac/pyminder
+https://github.com/ZAdamMac/Piminder
 """
 
 from gfxhat import lcd, backlight

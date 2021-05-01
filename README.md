@@ -1,44 +1,35 @@
-# Pyminder
-A simple heads-up-display/dashboard utility for the Raspberry Pi, premised on the [Pimoroni GFX Hat](https://shop.pimoroni.com/products/gfx-hat). This utility operates a small Flask-based RESTful API and provides two helper modules, `monitor` and `helpers`, allowing local scripts and cron jobs to display messages on the HAT in a structured way. Initial development is by [Arcana Labs](https://www.arcanalabs.ca). Development is very casually ongoing, with minor incremental improvements as they become desired within the lab.
+# Piminder
+A minimal-functionality heads-up-display/dashboard utility for the Raspberry Pi, premised on the [Pimoroni GFX Hat](https://shop.pimoroni.com/products/gfx-hat). This utility operates a small Flask-based RESTful API and provides two helper modules, `monitor` and `helpers`, allowing local scripts and cron jobs to display messages on the HAT in a structured way. Initial development is by [Arcana Labs](https://www.arcanalabs.ca). Development is very casually ongoing, with minor incremental improvements as they become desired within the lab.
 
 ## Fitness for Risk
-Pyminder is intended for use as a small-scale monitoring utility in a lab/private subnet capacity only. It is not hardened for or intended to for use with a WAN or direct exposure to the internet. Messages, including the service shared secret, are currently stored and exchanged in plaintext. The intended use case is to run the service listening to localhost only. Please do not use Pyminder as a security appliance or to store sensitive information.
+Piminder is intended for use as a small-scale monitoring utility in a lab/private subnet capacity only. It is not hardened for or intended to for use with a WAN or direct exposure to the internet, and should be protected by a reverse proxy and other traffic shaping rules at all times if present on such a network. The release version, 1.0 and later, includes TLS capabilities. It is strongly recommended you read the documentation fully before configuring and using this product.
 
 ## System Requirements
-It is supposed that the local versions of Raspbian and Python 3 are up to date. The test article also used an up-to-date version of Mariadb.
+It is supposed that the local versions of Raspbian and Python 3 are up to date. The test article also used an up-to-date version of Mariadb. Naturally, the GFX hat is also a requirement as the monitor will not work with any other display.
 
-## Installation Steps
-1. Clone this repo somewhere that will be accessible to you later.
-2. Update `./src/service/pyminder-service.conf` as needed.
-3. Update `./monitor/monitor.conf` as needed
-4. run `/src/helpers/dbinit.py` to initialize the database.
-5. Run `/src/serice/run.py` in the backround
-6. cd to `/src` and invoke monitor as a module with `python3 -m monitor monitor/monitor.conf` in background or foreground as desired.
+## Recommended Usage Instructions
+Note: Apart from `SECURITY.md`, all referenced documentation is in the `documentation` folder.
+1. Read the SECURITY.md and NETWORKING.md documentation thoroughly.
+2. Follow the instructions in SERVICE_SETUP.md to install and configure Piminder's service on its target device and create your first auth credentials
+3. `pip install Piminder` on any system where you wish to use `Piminder_helpers` or `Piminder_monitor`.
+4. Configure the monitor and establish it as a service on the host pi based on the instructions in `MONITOR_Setup.md`
 
 ## Using Helpers
-The helpers module exposes a class constructor and several convenience functions to allow scripts to more easily work with the Pyminder API. consider copying the directory to your `~/bin` for use with your cron jobs and ease of import (pypi/setuputils installation not currently provided).
+The helpers module exposes a class constructor and several convenience functions to allow scripts to more easily work with the Piminder API. 
 
 To use:
-1. instantiate a PyminderService object using the necessary configuration details:
+1. instantiate a PiminderService object using the necessary configuration details:
    
 ```python3
-somehandler = helpers.PyminderService(shared_secret, hostname, hostport, service_name)
+somehandler = Piminder_helpers.PiminderService(username, password, hostname, hostport, job_identifier)
 ```
 2. use the `.minor()`, `.major()`, and `.info()` methods of that object to post messages directly to the API, with the message as a string of arbitrary length.
 
-## Using the API Directly.
-The pyminder API is a REST-like API exposed via flask, at `$servicehost/api/messages/`. For authentication it expects a `x-pyminder-secret` header to be included in the request.
+## Using the APIs Directly.
+The Piminder API is a REST-like API exposed via flask, at `$servicehost/api/messages/` and `$servicehost/api/users`. The API expects basic authentication.
 
-It supports the following methods:
-- `GET` returning a full array of all stored messages as discreet objects
-- `POST` allowing the posting of one unique new message
-- `PATCH` updating a given message (indicated by an ID) as read.
-- `DELETE`, removing the given message from the DB.
-
-In the case of POST, PATCH, and DELETE, refer to `src/service/resources/messages.py` for a full breakdown of expected post bodies. The project wiki includes details on the intended use of each property.
-
-## Interacting with Pyminder
-Careful observation of the GFXHat will note that each of the six buttons is individually marked. When Pyminder is in operation, these buttons perform the following functions:
+## Interacting with Piminder
+Careful observation of the GFXHat will note that each of the six buttons is individually marked. When Piminder is in operation, these buttons perform the following functions:
 - "^" will scroll the current message upward.
 - "v" will scroll the current message downward.
 - "<" will mark the message as read.

@@ -1,16 +1,16 @@
 """
-This script is a component of the monitoring service for the Pyminder alert management utility.
-It is the main monitoring system which relies on pyminder.service to store messages and displays those messages on
+This script is a component of the monitoring service for the Piminder alert management utility.
+It is the main monitoring system which relies on Piminder.service to store messages and displays those messages on
 the GFXHat attached to the host Pi.
 
 Author: Zac Adam-MacEwen (zadammac@kenshosec.com)
 A Kensho Security Labs utility.
 Produced under license.
 Full license and documentation to be found at:
-https://github.com/ZAdamMac/pyminder
+https://github.com/ZAdamMac/Piminder
 """
 
-__version__ = "0.2.0"
+__version__ = "1.0.2"
 
 import argparse
 import base64
@@ -36,7 +36,7 @@ touched = 0  # A number of process cycles before the system will go back into st
 
 def display_splash():
     length_break_seconds = 15
-    disp.print_line(3, "Pyminder Monitor")
+    disp.print_line(3, "Piminder Monitor")
     disp.print_line(4, "v%s" % __version__)
     disp.print_line(7, "Get Messages...\u008B")
     sleep(length_break_seconds)
@@ -112,7 +112,6 @@ def retrieve_messages(configuration, ssl_context):
     conn.request("GET", "/api/messages/", headers={"Authorization": conf["authorization"],
                                                    "Content-type": "application/json"})
     resp = conn.getresponse()
-    conn.close()
     dict_resp = json.loads(resp.read())
     if dict_resp["error"] not in [200, 400]:  # 400 just indicates that the message should not be marked read twice.
         disp.clear_screen()
@@ -138,7 +137,6 @@ def delete_message(configuration, list_messages, target_index, ssl_context):
     conn.request("DELETE", "/api/messages/", headers={"Authorization": conf["authorization"],
                                                       "Content-type": "application/json"}, body=body_out)
     resp = conn.getresponse()
-    conn.close()
     dict_resp = json.loads(resp.read())
     if dict_resp["error"] not in [200, 400]:  # 400 prevents double-deletion from being fatal.
         disp.clear_screen()
@@ -160,7 +158,6 @@ def mark_read_message(configuration, list_messages, target_index, ssl_context):
     conn.request("PATCH", "/api/messages/", headers={"Authorization": conf["authorization"],
                                                      "Content-type": "application/json"}, body=body_out)
     resp = conn.getresponse()
-    conn.close()
     dict_resp = json.loads(resp.read())
     if dict_resp["error"] not in [200, 400]:  # 400 is an error but not fatal; just means the message got hit twice.
         disp.clear_screen()
@@ -224,9 +221,9 @@ def display_messages(list_messages, target_message, current_top_line, config):
 
 
 def obtain_ssl_context(config):
-    if bool(config["custom_cert"]):
+    if str(config["custom_cert"]).lower in ['true', 't', 'yes', 'y', '1']:
         ssl_context = ssl.create_default_context(cafile=config["trusted_cert"])
-        if bool(config["allow_self-signed_certs"]):
+        if str(config["allow_self-signed_certs"]) in ['true', 't', 'yes', 'y', '1']:
             ssl_context.check_hostname = False
             ssl_context.verify_mode = ssl.CERT_NONE
     else:
