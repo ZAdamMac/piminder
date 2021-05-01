@@ -78,7 +78,7 @@ version: '3'
 
 services:
   api:
-    image: Piminder-service:dev
+    image: zadammac/piminder:latest
     restart: always
     expose:
       - 80
@@ -87,11 +87,11 @@ services:
       VIRTUAL_HOST: something.unexpected.dev
       Piminder_HOST: '0.0.0.0'
       DEBUG: 'true'
-      Piminder_DB_HOST: pym-test-db
-      Piminder_DB_USER: Piminder
-      Piminder_DB_PASSWORD: verystrongpassword
-      Piminder_ADMIN_USER: admin
-      Piminder_ADMIN_PASSWORD: anothergoodpassword
+      PIMINDER_DB_HOST: pym-test-db
+      PIMINDER_DB_USER: Piminder
+      PIMINDER_DB_PASSWORD: verystrongpassword
+      PIMINDER_ADMIN_USER: admin
+      PIMINDER_ADMIN_PASSWORD: anothergoodpassword
       USE_SSL: 'False'
       LETSENCRYPT_HOST: something.unexpected.dev
       LETSENCRYPT_EMAIL: webmaster@unexpected.dev
@@ -100,6 +100,8 @@ services:
   pym-test-db:
      image: mariadb
      restart: always
+     volumes:
+       ./pyminder-db:/var/lib/mysql
      environment:
        MYSQL_DATABASE: Piminder
        MYSQL_USER: Piminder

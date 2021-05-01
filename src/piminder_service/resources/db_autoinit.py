@@ -43,18 +43,18 @@ def connect_to_db():
     """
     print("We must now connect to the database.")
     try:
-        db_user = os.environ['Piminder_DB_USER']
+        db_user = os.environ['PIMINDER_DB_USER']
     except KeyError:
         print("Missing envvar: Piminder_DB_USER")
         exit(1)
     root_password = None
     try:
-        root_password = os.environ['Piminder_DB_PASSWORD']
+        root_password = os.environ['PIMINDER_DB_PASSWORD']
     except KeyError:
         print("Missing envvar: Piminder_DB_PASSWORD")
         exit(1)
     try:
-        db_host = os.environ['Piminder_DB_HOST']
+        db_host = os.environ['PIMINDER_DB_HOST']
     except KeyError:
         print("Missing envvar: Piminder_DB_HOST")
         exit(1)
@@ -97,7 +97,7 @@ def create_administrative_user(connection):
 
     print("Validating an admin user exists:")
     try:
-        admin_name = os.environ['Piminder_ADMIN_USER']
+        admin_name = os.environ['PIMINDER_ADMIN_USER']
     except KeyError:
         print("Missing envvar: Piminder_ADMIN_USER")
         exit(1)
@@ -111,7 +111,7 @@ def create_administrative_user(connection):
     if count < 1:  # Only do this if no more than 0 exists.
         command = "INSERT INTO users (username, password, memo, permlevel) VALUES (%s, %s, 'Default User', 3);"
         try:
-            root_password = os.environ['Piminder_ADMIN_PASSWORD']
+            root_password = os.environ['PIMINDER_ADMIN_PASSWORD']
         except KeyError:
             print("Missing envvar: Piminder_ADMIN_PASSWORD")
             exit(1)

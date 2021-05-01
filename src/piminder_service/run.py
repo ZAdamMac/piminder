@@ -19,12 +19,12 @@ from resources.db_autoinit import runtime as db_autoinit
 __version__ = "v.1.0.0"  # This is the most recent version of the service that this script can initialize.
 
 env_mapping = {  # This dictionary maps environment variable keys to the expected names from the old config file format
-    "Piminder_HOST": "LISTENHOST",
-    "Piminder_PORT": "LISTENPORT",
-    "Piminder_DEBUG": "DEBUG",
-    "Piminder_DB_HOST": "DBHOST",
-    "Piminder_DB_PASSWORD": "PASSPHRASE",
-    "Piminder_DB_USER": "USERNAME",
+    "PIMINDER_HOST": "LISTENHOST",
+    "PIMINDER_PORT": "LISTENPORT",
+    "PIMINDER_DEBUG": "DEBUG",
+    "PIMINDER_DB_HOST": "DBHOST",
+    "PIMINDER_DB_PASSWORD": "PASSPHRASE",
+    "PIMINDER_DB_USER": "USERNAME",
     "USE_SSL": "USE_SSL",
     "SSL_CERT": "SSL_CERT",
     "SSL_KEY": "SSL_KEY",
@@ -98,12 +98,12 @@ def enforce_defaults(conf):  # This currently appears to superenforce. Why?
         if key not in extant:
             setattr(conf, key, defaults[key])
 
-    if conf.USE_SSL.lower() in ['yes', 'y', 'true', '1']:
+    if str(conf.USE_SSL.lower()) in ['yes', 'y', 'true', '1']:
         conf.USE_SSL = True
     else:
         conf.USE_SSL = False
 
-    if conf.DEBUG.lower() in ['yes', 'y', 'true', '1']:
+    if str(conf.DEBUG.lower()) in ['yes', 'y', 'true', '1']:
         conf.DEBUG = True
     else:
         conf.DEBUG = False
@@ -112,7 +112,7 @@ def enforce_defaults(conf):  # This currently appears to superenforce. Why?
 
 if __name__ == "__main__":
     db_autoinit()
-    config = parse_config("Piminder-service.conf")
+    config = parse_config("piminder-service.conf")
     config = parse_env(config)
     config = enforce_defaults(config)
     app = create_app(config)

@@ -10,7 +10,7 @@ Full license and documentation to be found at:
 https://github.com/ZAdamMac/Piminder
 """
 
-__version__ = "1.0.0"
+__version__ = "1.0.2"
 
 import argparse
 import base64
@@ -112,7 +112,6 @@ def retrieve_messages(configuration, ssl_context):
     conn.request("GET", "/api/messages/", headers={"Authorization": conf["authorization"],
                                                    "Content-type": "application/json"})
     resp = conn.getresponse()
-    conn.close()
     dict_resp = json.loads(resp.read())
     if dict_resp["error"] not in [200, 400]:  # 400 just indicates that the message should not be marked read twice.
         disp.clear_screen()
@@ -138,7 +137,6 @@ def delete_message(configuration, list_messages, target_index, ssl_context):
     conn.request("DELETE", "/api/messages/", headers={"Authorization": conf["authorization"],
                                                       "Content-type": "application/json"}, body=body_out)
     resp = conn.getresponse()
-    conn.close()
     dict_resp = json.loads(resp.read())
     if dict_resp["error"] not in [200, 400]:  # 400 prevents double-deletion from being fatal.
         disp.clear_screen()
@@ -160,7 +158,6 @@ def mark_read_message(configuration, list_messages, target_index, ssl_context):
     conn.request("PATCH", "/api/messages/", headers={"Authorization": conf["authorization"],
                                                      "Content-type": "application/json"}, body=body_out)
     resp = conn.getresponse()
-    conn.close()
     dict_resp = json.loads(resp.read())
     if dict_resp["error"] not in [200, 400]:  # 400 is an error but not fatal; just means the message got hit twice.
         disp.clear_screen()
@@ -224,9 +221,9 @@ def display_messages(list_messages, target_message, current_top_line, config):
 
 
 def obtain_ssl_context(config):
-    if bool(config["custom_cert"]):
+    if str(config["custom_cert"]).lower in ['true', 't', 'yes', 'y', '1']:
         ssl_context = ssl.create_default_context(cafile=config["trusted_cert"])
-        if bool(config["allow_self-signed_certs"]):
+        if str(config["allow_self-signed_certs"]) in ['true', 't', 'yes', 'y', '1']:
             ssl_context.check_hostname = False
             ssl_context.verify_mode = ssl.CERT_NONE
     else:
