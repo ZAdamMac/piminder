@@ -13,7 +13,7 @@ from flask_restful import Api
 from resources.messages import MessageAPI
 from resources.users import UsersAPI
 
-__version__ = "0.2.0"  # This version represents the overall version of the service this app instantiates.
+__version__ = "1.0.0"  # This version represents the overall version of the service this app instantiates.
 
 
 api_bp = Blueprint('api', __name__)
