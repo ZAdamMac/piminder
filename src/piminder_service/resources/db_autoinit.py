@@ -1,12 +1,12 @@
 """
-This script is a component of pyminder's back-end controller.
+This script is a component of Piminder's back-end controller.
 Specifically, it is a helper utility to be used to intialize a database for the user and message tables.
 Author: Zac Adam-MacEwen (zadammac@kenshosec.com)
 
 An Arcana Labs utility.
 Produced under license.
 Full license and documentation to be found at:
-https://github.com/ZAdamMac/pyminder
+https://github.com/ZAdamMac/Piminder
 """
 
 import bcrypt
@@ -43,24 +43,24 @@ def connect_to_db():
     """
     print("We must now connect to the database.")
     try:
-        db_user = os.environ['PYMINDER_DB_USER']
+        db_user = os.environ['Piminder_DB_USER']
     except KeyError:
-        print("Missing envvar: PYMINDER_DB_USER")
+        print("Missing envvar: Piminder_DB_USER")
         exit(1)
     root_password = None
     try:
-        root_password = os.environ['PYMINDER_DB_PASSWORD']
+        root_password = os.environ['Piminder_DB_PASSWORD']
     except KeyError:
-        print("Missing envvar: PYMINDER_DB_PASSWORD")
+        print("Missing envvar: Piminder_DB_PASSWORD")
         exit(1)
     try:
-        db_host = os.environ['PYMINDER_DB_HOST']
+        db_host = os.environ['Piminder_DB_HOST']
     except KeyError:
-        print("Missing envvar: PYMINDER_DB_HOST")
+        print("Missing envvar: Piminder_DB_HOST")
         exit(1)
     finally:
         conn = pymysql.connect(host=db_host, user=db_user,
-                               password=root_password, db='pyminder',
+                               password=root_password, db='Piminder',
                                charset='utf8mb4', cursorclass=pymysql.cursors.DictCursor)
 
     return conn
@@ -97,9 +97,9 @@ def create_administrative_user(connection):
 
     print("Validating an admin user exists:")
     try:
-        admin_name = os.environ['PYMINDER_ADMIN_USER']
+        admin_name = os.environ['Piminder_ADMIN_USER']
     except KeyError:
-        print("Missing envvar: PYMINDER_ADMIN_USER")
+        print("Missing envvar: Piminder_ADMIN_USER")
         exit(1)
 
     cur = connection.cursor()
@@ -111,9 +111,9 @@ def create_administrative_user(connection):
     if count < 1:  # Only do this if no more than 0 exists.
         command = "INSERT INTO users (username, password, memo, permlevel) VALUES (%s, %s, 'Default User', 3);"
         try:
-            root_password = os.environ['PYMINDER_ADMIN_PASSWORD']
+            root_password = os.environ['Piminder_ADMIN_PASSWORD']
         except KeyError:
-            print("Missing envvar: PYMINDER_ADMIN_PASSWORD")
+            print("Missing envvar: Piminder_ADMIN_PASSWORD")
             exit(1)
         hashed_rootpw = bcrypt.hashpw(root_password.encode('utf8'), bcrypt.gensalt())
         cur.execute(command, (admin_name, hashed_rootpw))

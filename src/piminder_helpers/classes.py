@@ -1,13 +1,13 @@
 """
-This script is a component of the pyminder helpers package. It defines classes to be used in other programs to interact
-with the pyminder service.
+This script is a component of the Piminder helpers package. It defines classes to be used in other programs to interact
+with the Piminder service.
 
 Author: Zac Adam-MacEwen (zadammac@kenshosec.com)
 A Kensho Security Labs utility.
 
 Produced under license.
 Full license and documentation to be found at:
-https://github.com/ZAdamMac/pyminder
+https://github.com/ZAdamMac/Piminder
 """
 
 import base64
@@ -17,14 +17,14 @@ import json
 import ssl
 
 
-class PyminderException(BaseException):
+class PiminderException(BaseException):
     pass
 
 
-class PyminderService(object):
+class PiminderService(object):
     def __init__(self, username, password, host, port, service_name, cert_path=None, self_signed=False):
         auth_precode = username + ":" + password
-        self.pyminder_key = "Basic %s" % (base64.b64encode(auth_precode.encode('utf8')).decode('utf8'))
+        self.Piminder_key = "Basic %s" % (base64.b64encode(auth_precode.encode('utf8')).decode('utf8'))
         self.host = str(host)
         self.port = int(port)
         self.name = str(service_name)
@@ -42,11 +42,11 @@ class PyminderService(object):
             "timestamp": datetime.datetime.utcnow().isoformat(sep="T", timespec="seconds") + "Z",
         }
         request_body = json.dumps(request_data)
-        connection.request("POST", "/api/messages/", body=request_body, headers={"Authorization": self.pyminder_key,
+        connection.request("POST", "/api/messages/", body=request_body, headers={"Authorization": self.Piminder_key,
                                                                                  "Content-type": "application/json"})
         resp = connection.getresponse()
         if resp.status != 200:  # We have encountered an error condition
-            raise PyminderException()
+            raise PiminderException()
 
     def info(self, message):
         self.post_message(message, "info")

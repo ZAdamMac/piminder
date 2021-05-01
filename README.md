@@ -1,8 +1,8 @@
-# Pyminder
+# Piminder
 A minimal-functionality heads-up-display/dashboard utility for the Raspberry Pi, premised on the [Pimoroni GFX Hat](https://shop.pimoroni.com/products/gfx-hat). This utility operates a small Flask-based RESTful API and provides two helper modules, `monitor` and `helpers`, allowing local scripts and cron jobs to display messages on the HAT in a structured way. Initial development is by [Arcana Labs](https://www.arcanalabs.ca). Development is very casually ongoing, with minor incremental improvements as they become desired within the lab.
 
 ## Fitness for Risk
-Pyminder is intended for use as a small-scale monitoring utility in a lab/private subnet capacity only. It is not hardened for or intended to for use with a WAN or direct exposure to the internet, and should be protected by a reverse proxy and other traffic shaping rules at all times if present on such a network. The release version, 1.0 and later, includes TLS capabilities. It is strongly recommended you read the documentation fully before configuring and using this product.
+Piminder is intended for use as a small-scale monitoring utility in a lab/private subnet capacity only. It is not hardened for or intended to for use with a WAN or direct exposure to the internet, and should be protected by a reverse proxy and other traffic shaping rules at all times if present on such a network. The release version, 1.0 and later, includes TLS capabilities. It is strongly recommended you read the documentation fully before configuring and using this product.
 
 ## System Requirements
 It is supposed that the local versions of Raspbian and Python 3 are up to date. The test article also used an up-to-date version of Mariadb. Naturally, the GFX hat is also a requirement as the monitor will not work with any other display.
@@ -10,26 +10,26 @@ It is supposed that the local versions of Raspbian and Python 3 are up to date. 
 ## Recommended Usage Instructions
 Note: Apart from `SECURITY.md`, all referenced documentation is in the `documentation` folder.
 1. Read the SECURITY.md and NETWORKING.md documentation thoroughly.
-2. Follow the instructions in SERVICE_SETUP.md to install and configure pyminder's service on its target device and create your first auth credentials
-3. `pip install pyminder` on any system where you wish to use `pyminder_helpers` or `pyminder_monitor`.
+2. Follow the instructions in SERVICE_SETUP.md to install and configure Piminder's service on its target device and create your first auth credentials
+3. `pip install Piminder` on any system where you wish to use `Piminder_helpers` or `Piminder_monitor`.
 4. Configure the monitor and establish it as a service on the host pi based on the instructions in `MONITOR_Setup.md`
 
 ## Using Helpers
-The helpers module exposes a class constructor and several convenience functions to allow scripts to more easily work with the Pyminder API. 
+The helpers module exposes a class constructor and several convenience functions to allow scripts to more easily work with the Piminder API. 
 
 To use:
-1. instantiate a PyminderService object using the necessary configuration details:
+1. instantiate a PiminderService object using the necessary configuration details:
    
 ```python3
-somehandler = pyminder_helpers.PyminderService(username, password, hostname, hostport, job_identifier)
+somehandler = Piminder_helpers.PiminderService(username, password, hostname, hostport, job_identifier)
 ```
 2. use the `.minor()`, `.major()`, and `.info()` methods of that object to post messages directly to the API, with the message as a string of arbitrary length.
 
 ## Using the APIs Directly.
-The pyminder API is a REST-like API exposed via flask, at `$servicehost/api/messages/` and `$servicehost/api/users`. The API expects basic authentication.
+The Piminder API is a REST-like API exposed via flask, at `$servicehost/api/messages/` and `$servicehost/api/users`. The API expects basic authentication.
 
-## Interacting with Pyminder
-Careful observation of the GFXHat will note that each of the six buttons is individually marked. When Pyminder is in operation, these buttons perform the following functions:
+## Interacting with Piminder
+Careful observation of the GFXHat will note that each of the six buttons is individually marked. When Piminder is in operation, these buttons perform the following functions:
 - "^" will scroll the current message upward.
 - "v" will scroll the current message downward.
 - "<" will mark the message as read.

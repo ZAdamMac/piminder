@@ -1,7 +1,7 @@
 """
-This script is a component of pyminder's back-end controller.
+This script is a component of Piminder's back-end controller.
 This resource is a collection of helper classes which are imported selectively
-into other resources that make up part of pyminder, to commonize handling tasks.
+into other resources that make up part of Piminder, to commonize handling tasks.
 
 Author: Zac Adam-MacEwen (zadammac@kenshosec.com)
 An Arcana Labs utility.

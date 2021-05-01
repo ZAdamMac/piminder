@@ -1,5 +1,5 @@
 """
-This script is a component of the Pyminder's back-end controller.
+This script is a component of the Piminder's back-end controller.
 It is the app-defining component of the Flask-based API system, and brings the
 system up by parsing the config and feeding it back into the app framework
 itself.
@@ -8,7 +8,7 @@ Author: Zac Adam-MacEwen (zadammac@kenshosec.com)
 An Arcana Labs utility.
 Produced under license.
 Full license and documentation to be found at:
-https://github.com/ZAdamMac/pyminder
+https://github.com/ZAdamMac/Piminder
 """
 
 from flask import Flask
@@ -19,12 +19,12 @@ from resources.db_autoinit import runtime as db_autoinit
 __version__ = "v.1.0.0"  # This is the most recent version of the service that this script can initialize.
 
 env_mapping = {  # This dictionary maps environment variable keys to the expected names from the old config file format
-    "PYMINDER_HOST": "LISTENHOST",
-    "PYMINDER_PORT": "LISTENPORT",
-    "PYMINDER_DEBUG": "DEBUG",
-    "PYMINDER_DB_HOST": "DBHOST",
-    "PYMINDER_DB_PASSWORD": "PASSPHRASE",
-    "PYMINDER_DB_USER": "USERNAME",
+    "Piminder_HOST": "LISTENHOST",
+    "Piminder_PORT": "LISTENPORT",
+    "Piminder_DEBUG": "DEBUG",
+    "Piminder_DB_HOST": "DBHOST",
+    "Piminder_DB_PASSWORD": "PASSPHRASE",
+    "Piminder_DB_USER": "USERNAME",
     "USE_SSL": "USE_SSL",
     "SSL_CERT": "SSL_CERT",
     "SSL_KEY": "SSL_KEY",
@@ -35,7 +35,7 @@ defaults = {  # Specifies default values for all configuration values in case fo
     "LISTENPORT": 80,
     "DEBUG": False,
     "DBHOST": "localhost",
-    "USERNAME": "pyminder",
+    "USERNAME": "Piminder",
     "PASSPHRASE": None,  # This will probably cause a crash but it's the sane default.
     "USE_SSL": False,
     "SSL_CERT": "cert.pem",
@@ -112,7 +112,7 @@ def enforce_defaults(conf):  # This currently appears to superenforce. Why?
 
 if __name__ == "__main__":
     db_autoinit()
-    config = parse_config("pyminder-service.conf")
+    config = parse_config("Piminder-service.conf")
     config = parse_env(config)
     config = enforce_defaults(config)
     app = create_app(config)

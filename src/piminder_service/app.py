@@ -1,11 +1,11 @@
 """
-This script is a component of the back-end service for the Pyminder Rasberry Pi utility..
+This script is a component of the back-end service for the Piminder Rasberry Pi utility..
 It is the app-defining component of the Flask-based API/UI service.
 Author: Zac Adam-MacEwen (zadammac@kenshosec.com)
 An Arcana Labs utility.
 Produced under license.
 Full license and documentation to be found at:
-https://github.com/ZAdamMac/pyminder
+https://github.com/ZAdamMac/Piminder
 """
 
 from flask import Blueprint

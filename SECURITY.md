@@ -18,4 +18,4 @@ Please contact securty@kenshosec.com rather than opening a ticket, due to the po
 
 For all other security issues (privesc, etc), a typical issue ticket would suffice.
 
-Please follow this repo for security updates. Pyminder does not report its usage back to base and we do not have a registration program, so we have no way to reach out to you if vulnerabilities are found.
+Please follow this repo for security updates. Piminder does not report its usage back to base and we do not have a registration program, so we have no way to reach out to you if vulnerabilities are found.

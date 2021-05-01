@@ -1,13 +1,13 @@
 """
-This script is a component of the monitoring service for the Pyminder alert management utility.
-It is the main monitoring system which relies on pyminder.service to store messages and displays those messages on
+This script is a component of the monitoring service for the Piminder alert management utility.
+It is the main monitoring system which relies on Piminder.service to store messages and displays those messages on
 the GFXHat attached to the host Pi.
 
 Author: Zac Adam-MacEwen (zadammac@kenshosec.com)
 A Kensho Security Labs utility.
 Produced under license.
 Full license and documentation to be found at:
-https://github.com/ZAdamMac/pyminder
+https://github.com/ZAdamMac/Piminder
 """
 
 __version__ = "1.0.0"
@@ -36,7 +36,7 @@ touched = 0  # A number of process cycles before the system will go back into st
 
 def display_splash():
     length_break_seconds = 15
-    disp.print_line(3, "Pyminder Monitor")
+    disp.print_line(3, "Piminder Monitor")
     disp.print_line(4, "v%s" % __version__)
     disp.print_line(7, "Get Messages...\u008B")
     sleep(length_break_seconds)
