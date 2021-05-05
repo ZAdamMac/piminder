@@ -10,7 +10,7 @@ The latest release version of Piminder-service is available through dockerub as 
 
 Both options have their pros and cons - in particular the config file is especially helpful as it can be mounted using [docker secrets](https://docs.docker.com/engine/swarm/secrets/). As this configuration does contain sensitive information pertaining to the credentials used in the service, that is recommended.
 
-This configuration has a major advantage in that it can be made part of an [nginx reverse proxy service](https://hub.docker.com/r/jwilder/nginx-proxy). While a guide on setting up such a service is forthcoming - and this document will be updated when it is available - a docker-compose file is provided below as an example of such a configuration, at the end of this file.
+This configuration has a major advantage in that it can be made part of an [nginx reverse proxy service](https://hub.docker.com/r/jwilder/nginx-proxy). We've created a general document on the ins and outs of doing this, [here](https://www.arcanalabs.ca/guides/revproxy.html), and a docker-compose file is provided below as an example of such a configuration, at the end of this file.
 
 ## Direct Deployment
 It is also possible to execute `run.py` within its own directory and run manually, using both configration options set below. When doing so it is strongly recommended that you enable SSL and provide your own certificates, or keep `LISTENHOST` as `localhost` at the bare minimum.
