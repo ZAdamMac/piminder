@@ -10,7 +10,7 @@ Full license and documentation to be found at:
 https://github.com/ZAdamMac/Piminder
 """
 
-__version__ = "1.0.2"
+__version__ = "1.0.3"
 
 import argparse
 import base64
@@ -128,96 +128,99 @@ def retrieve_messages(configuration, ssl_context):
 
 
 def delete_message(configuration, list_messages, target_index, ssl_context):
-    target_index = target_index % len(list_messages)
-    conf = configuration
-    target_mid = list_messages[target_index]["messageId"]
-    list_messages.pop(target_index)  # this simply removes the message from list_messages
-    body_out = "{\"messageId\":\"%s\"}" % target_mid
-    conn = http.client.HTTPSConnection(conf["service_host"], int(conf["service_port"]), context=ssl_context)
-    conn.request("DELETE", "/api/messages/", headers={"Authorization": conf["authorization"],
-                                                      "Content-type": "application/json"}, body=body_out)
-    resp = conn.getresponse()
-    dict_resp = json.loads(resp.read())
-    if dict_resp["error"] not in [200, 400]:  # 400 prevents double-deletion from being fatal.
-        disp.clear_screen()
-        disp.print_line(0, "Deletion Error:")
-        disp.print_line(1, "HTTP %s" % dict_resp["error"])
-        disp.print_line(2, "Fatal, exiting.")
-        exit(1)
-    updated_messages = retrieve_messages(configuration, ssl_context)  # Fetching the messages forces a screen update
+    if len(list_messages) > 0: # Needed to prevent a crash; calling this same length later can lead to a div/0 error
+        target_index = target_index % len(list_messages)
+        conf = configuration
+        target_mid = list_messages[target_index]["messageId"]
+        list_messages.pop(target_index)  # this simply removes the message from list_messages
+        body_out = "{\"messageId\":\"%s\"}" % target_mid
+        conn = http.client.HTTPSConnection(conf["service_host"], int(conf["service_port"]), context=ssl_context)
+        conn.request("DELETE", "/api/messages/", headers={"Authorization": conf["authorization"],
+                                                          "Content-type": "application/json"}, body=body_out)
+        resp = conn.getresponse()
+        dict_resp = json.loads(resp.read())
+        if dict_resp["error"] not in [200, 400]:  # 400 prevents double-deletion from being fatal.
+            disp.clear_screen()
+            disp.print_line(0, "Deletion Error:")
+            disp.print_line(1, "HTTP %s" % dict_resp["error"])
+            disp.print_line(2, "Fatal, exiting.")
+            exit(1)
+        updated_messages = retrieve_messages(configuration, ssl_context)  # Fetching the messages forces a screen update
 
     return updated_messages
 
 
 def mark_read_message(configuration, list_messages, target_index, ssl_context):
-    target_index = target_index % len(list_messages)
-    conf = configuration
-    target_mid = list_messages[target_index]["messageId"]
-    body_out = "{\"messageId\":\"%s\"}" % target_mid
-    conn = http.client.HTTPSConnection(conf["service_host"], int(conf["service_port"]), context=ssl_context)
-    conn.request("PATCH", "/api/messages/", headers={"Authorization": conf["authorization"],
-                                                     "Content-type": "application/json"}, body=body_out)
-    resp = conn.getresponse()
-    dict_resp = json.loads(resp.read())
-    if dict_resp["error"] not in [200, 400]:  # 400 is an error but not fatal; just means the message got hit twice.
-        disp.clear_screen()
-        disp.print_line(0, "Marking Read Error:")
-        disp.print_line(1, "HTTP %s" % dict_resp["error"])
-        disp.print_line(2, "Fatal, exiting.")
-        exit(1)
-    updated_messages = retrieve_messages(configuration, ssl_context)  # fetching the messages forces a screen update.
+    if len(list_messages) > 0:  # Needed to prevent a crash; calling this same length later can lead to a div/0 error
+        target_index = target_index % len(list_messages)
+        conf = configuration
+        target_mid = list_messages[target_index]["messageId"]
+        body_out = "{\"messageId\":\"%s\"}" % target_mid
+        conn = http.client.HTTPSConnection(conf["service_host"], int(conf["service_port"]), context=ssl_context)
+        conn.request("PATCH", "/api/messages/", headers={"Authorization": conf["authorization"],
+                                                         "Content-type": "application/json"}, body=body_out)
+        resp = conn.getresponse()
+        dict_resp = json.loads(resp.read())
+        if dict_resp["error"] not in [200, 400]:  # 400 is an error but not fatal; just means the message got hit twice.
+            disp.clear_screen()
+            disp.print_line(0, "Marking Read Error:")
+            disp.print_line(1, "HTTP %s" % dict_resp["error"])
+            disp.print_line(2, "Fatal, exiting.")
+            exit(1)
+        updated_messages = retrieve_messages(configuration, ssl_context)  # fetching the messages forces a screen update.
 
     return updated_messages
 
 
 def display_messages(list_messages, target_message, current_top_line, config):
-    target_message = target_message % len(list_messages)
-    this_message = list_messages[target_message]
-    severity = this_message["errorLevel"]
-    body = this_message["message"]
-    service = this_message["name"]
-    time = this_message["timestamp"]
-    time_modifier = dt.strptime(time, "%Y-%m-%dT%H:%M:%SZ")  # The API returns an ISO 8601-compliant timestamp, but
-    time = time_modifier.strftime("%y-%m-%dT%H:%MZ")         # we need a shorter output time for the display
-    is_read = this_message["read"]
-    if not is_read:
-        touch.set_led(2, 1)
-    else:
-        touch.set_led(2, 0)
-    if severity.lower() == "info":
-        disp.backlight_set_hue(config["info_color"])
-        service = "%-15s\u0089" % service
-    elif severity.lower() == "major":
-        disp.backlight_set_hue(config["major_error_color"])
-        service = "%-15s\u0087" % service
-    elif severity.lower() == "minor":
-        disp.backlight_set_hue(config["minor_error_color"])
-        service = "%-15s\u0088" % service
-    body_wrapped = textwrap.wrap(body, 16)
-    current_top_line = current_top_line % len(body_wrapped)
-    if current_top_line == 0:
-        touch.set_led(0, 0)
-    else:
-        touch.set_led(0, 1)
-    if current_top_line < len(body_wrapped) and len(body_wrapped) > 6:
-        touch.set_led(1, 1)
-    else:
-        touch.set_led(1, 0)
-    if target_message == 0:
-        touch.set_led(3, 0)
-    else:
-        touch.set_led(3, 1)
-    if target_message != (len(list_messages) - 1):
-        touch.set_led(5, 1)
-    else:
-        touch.set_led(5, 0)
-    disp.print_line(0, service)
-    disp.print_line(1, time)
-    for each in range(6):
-        try:
-            disp.print_line(2+each, body_wrapped[each+current_top_line])
-        except IndexError:  # We have reached the end of the message
-            disp.print_line(2+each, "")
+    if len(list_message) > 0: # Needed to prevent a crash; calling this same length later can lead to a div/0 error
+        target_message = target_message % len(list_messages)
+        this_message = list_messages[target_message]
+        severity = this_message["errorLevel"]
+        body = this_message["message"]
+        service = this_message["name"]
+        time = this_message["timestamp"]
+        time_modifier = dt.strptime(time, "%Y-%m-%dT%H:%M:%SZ")  # The API returns an ISO 8601-compliant timestamp, but
+        time = time_modifier.strftime("%y-%m-%dT%H:%MZ")         # we need a shorter output time for the display
+        is_read = this_message["read"]
+        if not is_read:
+            touch.set_led(2, 1)
+        else:
+            touch.set_led(2, 0)
+        if severity.lower() == "info":
+            disp.backlight_set_hue(config["info_color"])
+            service = "%-15s\u0089" % service
+        elif severity.lower() == "major":
+            disp.backlight_set_hue(config["major_error_color"])
+            service = "%-15s\u0087" % service
+        elif severity.lower() == "minor":
+            disp.backlight_set_hue(config["minor_error_color"])
+            service = "%-15s\u0088" % service
+        body_wrapped = textwrap.wrap(body, 16)
+        current_top_line = current_top_line % len(body_wrapped)
+        if current_top_line == 0:
+            touch.set_led(0, 0)
+        else:
+            touch.set_led(0, 1)
+        if current_top_line < len(body_wrapped) and len(body_wrapped) > 6:
+            touch.set_led(1, 1)
+        else:
+            touch.set_led(1, 0)
+        if target_message == 0:
+            touch.set_led(3, 0)
+        else:
+            touch.set_led(3, 1)
+        if target_message != (len(list_messages) - 1):
+            touch.set_led(5, 1)
+        else:
+            touch.set_led(5, 0)
+        disp.print_line(0, service)
+        disp.print_line(1, time)
+        for each in range(6):
+            try:
+                disp.print_line(2+each, body_wrapped[each+current_top_line])
+            except IndexError:  # We have reached the end of the message
+                disp.print_line(2+each, "")
 
 
 def obtain_ssl_context(config):
