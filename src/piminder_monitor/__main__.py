@@ -173,7 +173,7 @@ def mark_read_message(configuration, list_messages, target_index, ssl_context):
 
 
 def display_messages(list_messages, target_message, current_top_line, config):
-    if len(list_message) > 0: # Needed to prevent a crash; calling this same length later can lead to a div/0 error
+    if len(list_messages) > 0: # Needed to prevent a crash; calling this same length later can lead to a div/0 error
         target_message = target_message % len(list_messages)
         this_message = list_messages[target_message]
         severity = this_message["errorLevel"]
