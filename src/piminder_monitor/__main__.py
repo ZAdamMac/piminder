@@ -10,7 +10,7 @@ Full license and documentation to be found at:
 https://github.com/ZAdamMac/Piminder
 """
 
-__version__ = "1.0.3"
+__version__ = "1.0.5"
 
 import argparse
 import base64
@@ -145,7 +145,7 @@ def delete_message(configuration, list_messages, target_index, ssl_context):
             disp.print_line(1, "HTTP %s" % dict_resp["error"])
             disp.print_line(2, "Fatal, exiting.")
             exit(1)
-        updated_messages = retrieve_messages(configuration, ssl_context)  # Fetching the messages forces a screen update
+    updated_messages = retrieve_messages(configuration, ssl_context)  # Fetching the messages forces a screen update
 
     return updated_messages
 
@@ -167,7 +167,7 @@ def mark_read_message(configuration, list_messages, target_index, ssl_context):
             disp.print_line(1, "HTTP %s" % dict_resp["error"])
             disp.print_line(2, "Fatal, exiting.")
             exit(1)
-        updated_messages = retrieve_messages(configuration, ssl_context)  # fetching the messages forces a screen update.
+    updated_messages = retrieve_messages(configuration, ssl_context)  # fetching the messages forces a screen update.
 
     return updated_messages
 
