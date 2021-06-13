@@ -10,7 +10,7 @@ Full license and documentation to be found at:
 https://github.com/ZAdamMac/Piminder
 """
 
-__version__ = "1.0.3"
+__version__ = "1.0.5"
 
 import argparse
 import base64
@@ -145,7 +145,7 @@ def delete_message(configuration, list_messages, target_index, ssl_context):
             disp.print_line(1, "HTTP %s" % dict_resp["error"])
             disp.print_line(2, "Fatal, exiting.")
             exit(1)
-        updated_messages = retrieve_messages(configuration, ssl_context)  # Fetching the messages forces a screen update
+    updated_messages = retrieve_messages(configuration, ssl_context)  # Fetching the messages forces a screen update
 
     return updated_messages
 
@@ -167,7 +167,7 @@ def mark_read_message(configuration, list_messages, target_index, ssl_context):
             disp.print_line(1, "HTTP %s" % dict_resp["error"])
             disp.print_line(2, "Fatal, exiting.")
             exit(1)
-        updated_messages = retrieve_messages(configuration, ssl_context)  # fetching the messages forces a screen update.
+    updated_messages = retrieve_messages(configuration, ssl_context)  # fetching the messages forces a screen update.
 
     return updated_messages
 
@@ -272,6 +272,15 @@ def runtime():
             for each in range(6):
                 touch.set_led(each, 0)
             exit(0)
+        except OSError:  # In the event of a network availability issue, the other functions can raise this.
+            disp.clear_screen()
+            for each in range(6):
+                touch.set_led(each, 0)
+            disp.print_line(3, "Piminder Monitor")
+            disp.print_line(4, "v%s" % __version__)
+            disp.print_line(7, "Network Fault...\u008B")
+            disp.backlight_set_hue(config["minor_error_color"])
+            sleep(60)
 
 
 if __name__ == "__main__":
