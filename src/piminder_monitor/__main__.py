@@ -272,6 +272,15 @@ def runtime():
             for each in range(6):
                 touch.set_led(each, 0)
             exit(0)
+        except OSError:  # In the event of a network availability issue, the other functions can raise this.
+            disp.clear_screen()
+            for each in range(6):
+                touch.set_led(each, 0)
+            disp.print_line(3, "Piminder Monitor")
+            disp.print_line(4, "v%s" % __version__)
+            disp.print_line(7, "Network Fault...\u008B")
+            disp.backlight_set_hue(config["minor_error_color"])
+            sleep(60)
 
 
 if __name__ == "__main__":
