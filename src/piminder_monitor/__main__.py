@@ -279,7 +279,7 @@ def runtime():
             disp.print_line(3, "Piminder Monitor")
             disp.print_line(4, "v%s" % __version__)
             disp.print_line(7, "Network Fault...\u008B")
-            disp.backlight_set_hue(config["minor_error_color"])
+            disp.backlight_set_hue(dict_config["minor_error_color"])
             sleep(60)
 
 
