@@ -10,7 +10,7 @@ Full license and documentation to be found at:
 https://github.com/ZAdamMac/Piminder
 """
 
-__version__ = "1.0.5"
+__version__ = "1.0.6"
 
 import argparse
 import base64

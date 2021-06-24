@@ -4,7 +4,7 @@ with open("../README.md", "r") as f:
       long_description = f.read()
 
 setup(name='piminder',
-      version='1.0.5',
+      version='1.0.6',
       description='Piminder is a special network messanging service for status alerts.',
       long_description=long_description,
       author='Zac Adam-MacEwen',
