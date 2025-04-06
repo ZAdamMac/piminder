@@ -24,6 +24,7 @@ To use:
 somehandler = Piminder_helpers.PiminderService(username, password, hostname, hostport, job_identifier)
 ```
 2. use the `.minor()`, `.major()`, and `.info()` methods of that object to post messages directly to the API, with the message as a string of arbitrary length.
+  - Versions 1.1.0 and later: the flags `unique` and `update_timestamp` can now be passed to all alert levels to prevent flooding with frequently-run monitors.
 
 ## Using the APIs Directly.
 The Piminder API is a REST-like API exposed via flask, at `$servicehost/api/messages/` and `$servicehost/api/users`. The API expects basic authentication.

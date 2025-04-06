@@ -1,5 +1,5 @@
 FROM ubuntu:20.04
-LABEL maintainer="zadammac@kenshosec.com"
+LABEL maintainer="zadammac@arcanalabs.ca"
 
 
 RUN apt-get update -y && apt-get install -y python3 python3-pip
