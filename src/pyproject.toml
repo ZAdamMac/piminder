@@ -1,0 +1,11 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "piminder"
+version = "1.1"
+description = 'Piminder is a special network messanging service for status alerts.'
+dependencies=['bcrypt', 'flask', 'flask_restful', 'pymysql']
+authors= [{'name'='Zac Adam-MacEwen','email'='zadammac@arcanalabs.ca'}]
+dynamic = ['readme']
