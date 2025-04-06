@@ -42,7 +42,7 @@ class UniqueMessageAPI(Resource):
             return {'message': 'Internal Server Error, sql error'}, 501
         proceed, user = basic_auth(cookie, connection)
         if proceed:  # A chicken ain't nothing but a bird.
-            dict_return = authenticated_exec(user, 1, connection, messages_post, request.get_json())
+            dict_return = authenticated_exec(user, 1, connection, unique_messages_post, request.get_json())
             resp = make_response(dict_return)
             resp.status_code = dict_return["error"]
             resp.content_type = "application/json"
@@ -67,7 +67,7 @@ def unique_messages_post(body, connection):
         cmd = "SELECT id " \
               "FROM messages " \
               "WHERE name=%s AND message=%s"
-        rows = cur.execute(cmd, (body["name"], body[message]))
+        rows = cur.execute(cmd, (body["name"], body["message"]))
         if rows:
             result = cur.fetchone()
         # If not, create it
@@ -88,11 +88,11 @@ def unique_messages_post(body, connection):
         if rows:
             if body["updateTimestamp"]:
                 cmd = "UPDATE messages " \
-                      "SET read_flag=FALSE, timestamp=FROM_UNIXTIME(%(timestamp)s) " \
+                      "SET read_flag=FALSE, time_raised=FROM_UNIXTIME(%(timestamp)s) " \
                       "WHERE id=%(id)s"
             else:
                 cmd = "UPDATE messages " \
-                      "SET read_flag=FALSE, " \
+                      "SET read_flag=FALSE " \
                       "WHERE id=%(id)s"
             result.update({"timestamp": datetime.datetime.strptime(body["timestamp"], "%Y-%m-%dT%H:%M:%SZ").timestamp()})
             cur.execute(cmd, result)

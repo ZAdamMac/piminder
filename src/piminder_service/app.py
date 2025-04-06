@@ -22,5 +22,5 @@ api = Api(api_bp)
 
 # New Routes below this line
 api.add_resource(MessageAPI, '/messages/')
-api.add_resource(UniqueMessageAPI, '/messages/unique')
+api.add_resource(UniqueMessageAPI, '/messages/unique/')
 api.add_resource(UsersAPI, '/users/')
