@@ -7,7 +7,7 @@ Piminder doesn't have automated crash and bug reporting, and its unlikely it eve
 
 Secondly, we do have a few resources for the eager:
 - [**Discord Server:**](https://discord.gg/34KJfkg) easily the fastest way to join in the conversation or ask a question;
-- [Email Development Team](mailto:pymdev@kenshosec.com);
+- [Email Development Team](mailto:pymdev@arcanalabs.ca);
 - and, of course, this guide!
 
 # Development Team
@@ -37,7 +37,3 @@ As a freeware project, we're obviously working with the bare minimum funding pos
 [![ko-fi](https://www.ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/A8614WZ3)
 
 As a note, this is my personal Ko-Fi - if this ever becomes the work of a full-blown development group an organizational account will be created.
-
-If you want to support Tapestry's development on an ongoing basis, [consider backing ZAdamMac through Github Sponsors](https://github.com/users/ZAdamMac/sponsorship). This is an especially helpful case as Github is currently matching sponsors' donations in order to promote the Sponsors platform.
-
-At present, we simply have no way for you to contribute with cryptocurrencies. If this is something you'd like to consider, let us know and we'll discuss the possibilities.

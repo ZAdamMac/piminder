@@ -17,7 +17,7 @@ import pymysql
 import uuid
 from .utilities import authenticated_exec, basic_auth, json_validate
 
-__version__ = "0.2.0"
+__version__ = "1.1.0"
 
 
 class MessageAPI(Resource):
@@ -213,7 +213,7 @@ def messages_patch(body, connection):
               "WHERE id=%s"
         cur.execute(cmd, body["messageId"])
         response = cur.fetchone()
-        print(response)
+        #print(response)
         # Gotta be a better way to do the following line, but...
         try:
             if response["read_flag"] == b'\x00':
