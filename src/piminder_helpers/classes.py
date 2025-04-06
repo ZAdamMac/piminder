@@ -41,12 +41,12 @@ class PiminderService(object):
             "errorlevel": level,
             "timestamp": datetime.datetime.utcnow().isoformat(sep="T", timespec="seconds") + "Z",
         }
-        request_body = json.dumps(request_data)
         if unique:
-            endpoint = "/api/messages/"
+            endpoint = "/api/messages/unique/"
             request_data.update({"updateTimestamp": update_timestamp})
         else:
-            endpoint = "/api/messages/unique"
+            endpoint = "/api/messages/"
+        request_body = json.dumps(request_data)
         connection.request("POST", endpoint, body=request_body, headers={"Authorization": self.Piminder_key,
                                                                                  "Content-type": "application/json"})
         resp = connection.getresponse()
