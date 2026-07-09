@@ -1,6 +1,9 @@
 # Piminder
 A minimal-functionality heads-up-display/dashboard utility for the Raspberry Pi, premised on the [Pimoroni GFX Hat](https://shop.pimoroni.com/products/gfx-hat). This utility operates a small Flask-based RESTful API and provides two helper modules, `monitor` and `helpers`, allowing local scripts and cron jobs to display messages on the HAT in a structured way. Initial development is by [Arcana Labs](https://www.arcanalabs.ca). Development is very casually ongoing, with minor incremental improvements as they become desired within the lab.
 
+## NOTICE: Github End of Life
+The version of the project hosted on github is no longer being actively maintained and has been scheduled for truncation (removal of branches and notices apart from this readme file). The authoritative main repository of this project is [Arcana Labs' Forgejo](https://forgejo.arcanalabs.ca/zadammac/piminder). Please redirect your upstream branch definitions to that repository. In the days to come, the remaining files from this repository will be removed and purged from the commit history on Github. This has been done because of GitHub's decision to allow for - and encourage - the training of proprietary large language model code generation systems on codebases where the licensing implicitly (or often explicitly) does not permit such conversion.
+
 ## Fitness for Risk
 Piminder is intended for use as a small-scale monitoring utility in a lab/private subnet capacity only. It is not hardened for or intended to for use with a WAN or direct exposure to the internet, and should be protected by a reverse proxy and other traffic shaping rules at all times if present on such a network. The release version, 1.0 and later, includes TLS capabilities. It is strongly recommended you read the documentation fully before configuring and using this product.
 
